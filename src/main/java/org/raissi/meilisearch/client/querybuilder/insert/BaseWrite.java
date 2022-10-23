@@ -4,7 +4,6 @@ public abstract class BaseWrite {
 
     protected final String completePath;
 
-
     public BaseWrite(String index) {
         this.completePath = "/indexes/"+index+"/"+"documents";
     }

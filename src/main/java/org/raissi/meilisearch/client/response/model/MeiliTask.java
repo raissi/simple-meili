@@ -32,6 +32,7 @@ public class MeiliTask {
     private ZonedDateTime startedAt;
     private ZonedDateTime finishedAt;
     private MeiliError error;
+    private MeiliTaskDetails details;
 
     public String getUid() {
         return uid;
@@ -95,5 +96,13 @@ public class MeiliTask {
 
     public void setError(MeiliError error) {
         this.error = error;
+    }
+
+    public MeiliTaskDetails getDetails() {
+        return details;
+    }
+
+    public void setDetails(MeiliTaskDetails details) {
+        this.details = details;
     }
 }

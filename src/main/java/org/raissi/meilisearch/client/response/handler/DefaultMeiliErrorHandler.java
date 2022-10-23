@@ -25,6 +25,7 @@ public class DefaultMeiliErrorHandler implements ResponseHandler {
             logger.error("404 - Could not find resource(s) at: {}. Server responded with: {}", request.path(), respBody);
             return Optional.of(new NotFoundException(calledResource, respBody));
         }
+        logger.error("{} - Could not execute request at: {}. Server responded with: {}", code, request.path(), respBody);
         return Optional.of(new MeiliSearchException("Got error "+code+" not yet handled. Body is: "+respBody));
     }
 }

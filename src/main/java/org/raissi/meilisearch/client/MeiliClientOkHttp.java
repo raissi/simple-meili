@@ -7,6 +7,7 @@ import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.WriteCanDefinePrimaryKey;
 import org.raissi.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
 import org.raissi.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteIndex;
 import org.raissi.meilisearch.client.querybuilder.delete.DeleteOneDocument;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
@@ -126,6 +127,19 @@ public class MeiliClientOkHttp implements MeiliClient {
         Function<Request.Builder, Request> methodBuilder = builder -> builder.put(RequestBody.create(upsert.json(), JSON))
                 .build();
         return write(upsert, methodBuilder);
+    }
+
+    @Override
+    public Try<CanBlockOnTask> delete(DeleteIndex deleteIndex) {
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.delete()
+                .build();
+        return write(deleteIndex, methodBuilder, Map.of());
+    }
+
+    @Override
+    public Try<CanBlockOnTask> deleteIndex(String index) {
+        DeleteIndex delete = MeiliQueryBuilder.index(index).delete();
+        return delete(delete);
     }
 
     @Override

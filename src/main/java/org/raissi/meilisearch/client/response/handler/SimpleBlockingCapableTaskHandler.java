@@ -3,7 +3,6 @@ package org.raissi.meilisearch.client.response.handler;
 import org.raissi.meilisearch.client.MeiliClient;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.tasks.GetTask;
-import org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
 import org.raissi.meilisearch.client.response.model.MeiliWriteResponse;
 import org.raissi.meilisearch.control.Try;
@@ -13,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse.TASK_SUCCEEDED;
 
 /**
  * This is a very simple Task wating capable handler. Should be replaced with more robust one
@@ -66,7 +63,7 @@ public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
         int calls = 0;
         while (!isComplete(status) && exceptionGettingStatus.get().isEmpty()) {
             currentTask = Try.of(() -> {
-                Thread.sleep(50);
+                Thread.sleep(20);
                 return "OK to call again";
             }).andThen(s -> meiliClient.get(getTask))
             .ifFailure(e -> exceptionGettingStatus.set(Optional.of(e)));
