@@ -1,5 +1,8 @@
 package org.raissi.meilisearch.client;
 
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteOneDocument;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
@@ -11,6 +14,7 @@ import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
 import org.raissi.meilisearch.control.Try;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface MeiliClient {
@@ -33,4 +37,16 @@ public interface MeiliClient {
     <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override);
 
     <T> Try<CanBlockOnTask> upsert(UpsertDocuments<T> upsert);
+
+    <T> Try<CanBlockOnTask> deleteOne(String index, T id);
+
+    Try<CanBlockOnTask> deleteOne(DeleteOneDocument deleteOne);
+
+    <T> Try<CanBlockOnTask> deleteAll(DeleteAllDocuments deleteAll);
+
+    <T> Try<CanBlockOnTask> deleteAll(String index);
+
+    <T> Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds);
+
+    <T> Try<CanBlockOnTask> deleteByIds(String index, Collection<T> ids);
 }

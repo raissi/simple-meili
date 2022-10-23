@@ -3,6 +3,11 @@ package org.raissi.meilisearch.client;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
+import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
+import org.raissi.meilisearch.client.querybuilder.WriteCanDefinePrimaryKey;
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
+import org.raissi.meilisearch.client.querybuilder.delete.DeleteOneDocument;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.WriteRequest;
@@ -11,7 +16,7 @@ import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFou
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.querybuilder.tasks.GetTask;
-import org.raissi.meilisearch.client.response.*;
+import org.raissi.meilisearch.client.response.SearchResponse;
 import org.raissi.meilisearch.client.response.exceptions.MeiliSearchException;
 import org.raissi.meilisearch.client.response.handler.*;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
@@ -122,10 +127,57 @@ public class MeiliClientOkHttp implements MeiliClient {
                 .build();
         return write(upsert, methodBuilder);
     }
-    private <T, X extends WriteRequest<T, X>> Try<CanBlockOnTask> write(WriteRequest<T, X> override, Function<Request.Builder, Request> methodBuilder) {
-        Map<String, String> params = override.primaryKey()
+
+    @Override
+    public <T> Try<CanBlockOnTask> deleteOne(String index, T id) {
+        DeleteOneDocument one = MeiliQueryBuilder.fromIndex(index).delete(id);
+        return deleteOne(one);
+    }
+
+    @Override
+    public Try<CanBlockOnTask> deleteOne(DeleteOneDocument deleteOne) {
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.delete()
+                .build();
+        return write(deleteOne, methodBuilder, Map.of());
+    }
+
+    @Override
+    public Try<CanBlockOnTask> deleteAll(DeleteAllDocuments deleteAll) {
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.delete()
+                .build();
+        return write(deleteAll, methodBuilder, Map.of());
+    }
+
+    @Override
+    public Try<CanBlockOnTask> deleteAll(String index) {
+        DeleteAllDocuments deleteAll = MeiliQueryBuilder.fromIndex(index).deleteAll();
+        return deleteAll(deleteAll);
+    }
+
+    @Override
+    public Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds) {
+        Function<Request.Builder, Request> methodBuilder = builder ->
+                            builder.delete(RequestBody.create(deleteByIds.json(), JSON))
+                                    .build();
+        return write(deleteByIds, methodBuilder, Map.of());
+    }
+
+    @Override
+    public <T> Try<CanBlockOnTask> deleteByIds(String index, Collection<T> ids) {
+        DeleteDocumentsByIds byIds = MeiliQueryBuilder.fromIndex(index).delete(ids);
+        return deleteByIds(byIds);
+    }
+
+    private <T, X extends WriteCanDefinePrimaryKey<T, X>> Try<CanBlockOnTask> write(WriteCanDefinePrimaryKey<T, X> write, Function<Request.Builder, Request> methodBuilder) {
+        Map<String, String> params = write.primaryKey()
                 .map(p -> Map.of("primaryKey", p))
                 .orElse(Map.of());
+        return write(write, methodBuilder, params);
+    }
+
+    private Try<CanBlockOnTask> write(WriteRequest override,
+                                      Function<Request.Builder, Request> methodBuilder,
+                                      Map<String, String> params) {
         String path = override.path();
         HttpUrl url = url(params, path);
 

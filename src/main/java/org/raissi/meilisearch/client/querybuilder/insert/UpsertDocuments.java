@@ -1,4 +1,6 @@
 package org.raissi.meilisearch.client.querybuilder.insert;
 
-public interface UpsertDocuments<T> extends WriteRequest<T, UpsertDocuments<T>> {
+import org.raissi.meilisearch.client.querybuilder.WriteCanDefinePrimaryKey;
+
+public interface UpsertDocuments<T> extends WriteCanDefinePrimaryKey<T, UpsertDocuments<T>> {
 }

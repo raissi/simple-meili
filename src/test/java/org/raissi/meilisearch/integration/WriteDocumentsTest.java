@@ -135,7 +135,7 @@ public class WriteDocumentsTest {
         return new Author.AuthorNoCountry(a.getName(), a.getName());
     }
 
-    private List<Author> authors() {
+    public static List<Author> authors() {
         Author austen = new Author();
         austen.setUid("1");
         austen.setName("Jane Austen");
