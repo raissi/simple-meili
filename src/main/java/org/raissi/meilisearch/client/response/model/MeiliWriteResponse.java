@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.ZonedDateTime;
 
-public class MeiliWriteResponse {
+public class MeiliWriteResponse implements MeiliAsyncWriteResponse{
 
 
     private int taskUid;
@@ -18,11 +18,17 @@ public class MeiliWriteResponse {
         return taskUid;
     }
 
+    @Override
+    public String taskId() {
+        return String.valueOf(taskUid);
+    }
+
     public void setTaskUid(int taskUid) {
         this.taskUid = taskUid;
     }
 
-    public String getIndexUid() {
+    @Override
+    public String index() {
         return indexUid;
     }
 
@@ -30,7 +36,8 @@ public class MeiliWriteResponse {
         this.indexUid = indexUid;
     }
 
-    public String getStatus() {
+    @Override
+    public String initialTaskStatus() {
         return status;
     }
 
@@ -38,7 +45,8 @@ public class MeiliWriteResponse {
         this.status = status;
     }
 
-    public String getWriteType() {
+    @Override
+    public String writeType() {
         return writeType;
     }
 
@@ -46,7 +54,8 @@ public class MeiliWriteResponse {
         this.writeType = writeType;
     }
 
-    public ZonedDateTime getEnqueuedAt() {
+    @Override
+    public ZonedDateTime enqueuedAt() {
         return enqueuedAt;
     }
 

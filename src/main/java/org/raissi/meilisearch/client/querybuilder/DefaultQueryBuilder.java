@@ -1,7 +1,9 @@
 package org.raissi.meilisearch.client.querybuilder;
 
 import org.raissi.meilisearch.client.querybuilder.insert.DefaultOverrideDocuments;
+import org.raissi.meilisearch.client.querybuilder.insert.DefaultUpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
+import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.DefaultGetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.DefaultGetDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
@@ -33,5 +35,10 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     @Override
     public <T> OverrideDocuments<T> overrideDocuments(List<T> documents) {
         return new DefaultOverrideDocuments<>(this.index, documents);
+    }
+
+    @Override
+    public <T> UpsertDocuments<T> upsertDocuments(List<T> documents) {
+        return new DefaultUpsertDocuments<>(this.index, documents);
     }
 }

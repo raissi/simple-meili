@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MeiliTask {
@@ -30,6 +31,7 @@ public class MeiliTask {
     private ZonedDateTime enqueuedAt;
     private ZonedDateTime startedAt;
     private ZonedDateTime finishedAt;
+    private MeiliError error;
 
     public String getUid() {
         return uid;
@@ -85,5 +87,13 @@ public class MeiliTask {
 
     public void setFinishedAt(ZonedDateTime finishedAt) {
         this.finishedAt = finishedAt;
+    }
+
+    public Optional<MeiliError> getError() {
+        return Optional.ofNullable(error);
+    }
+
+    public void setError(MeiliError error) {
+        this.error = error;
     }
 }

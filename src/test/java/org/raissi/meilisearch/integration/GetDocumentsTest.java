@@ -144,7 +144,7 @@ public class GetDocumentsTest {
                 .andThenTry(SearchResponse::list)
                 .orElse(Collections::emptyList);
 
-        Assertions.assertAll("Should return address of Oracle's headquarter",
+        Assertions.assertAll("Should not return overview field",
             movies.stream().map(movie -> () -> Assertions.assertNull(movie.getOverview()))
         );
     }

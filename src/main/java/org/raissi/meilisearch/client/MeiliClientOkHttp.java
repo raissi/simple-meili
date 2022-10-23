@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
+import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
+import org.raissi.meilisearch.client.querybuilder.insert.WriteRequest;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
@@ -19,6 +21,7 @@ import org.raissi.meilisearch.control.Try;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 
 public class MeiliClientOkHttp implements MeiliClient {
 
@@ -104,19 +107,33 @@ public class MeiliClientOkHttp implements MeiliClient {
                 });
     }
 
+    //TODO check whether to overload with a callback method
+
     @Override
     public <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override) {
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.post(RequestBody.create(override.json(), JSON))
+                .build();
+        return write(override, methodBuilder);
+    }
+
+    @Override
+    public <T> Try<CanBlockOnTask> upsert(UpsertDocuments<T> upsert) {
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.put(RequestBody.create(upsert.json(), JSON))
+                .build();
+        return write(upsert, methodBuilder);
+    }
+    private <T, X extends WriteRequest<T, X>> Try<CanBlockOnTask> write(WriteRequest<T, X> override, Function<Request.Builder, Request> methodBuilder) {
         Map<String, String> params = override.primaryKey()
                 .map(p -> Map.of("primaryKey", p))
                 .orElse(Map.of());
         String path = override.path();
         HttpUrl url = url(params, path);
 
-        Request request = new Request.Builder()
+        Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
-                .addHeader("Authorization", BEARER + searchKey)
-                .post(RequestBody.create(override.json(), JSON))
-                .build();
+                .addHeader("Authorization", BEARER + searchKey);
+
+        Request request = methodBuilder.apply(requestBuilder);
 
         return Try.of(() -> executeAndThrowIfEmptyException(request, new DefaultMeiliErrorHandler(override)))
                 .andThenTry(rawResponse -> objectMapper.readValue(rawResponse, MeiliWriteResponse.class))

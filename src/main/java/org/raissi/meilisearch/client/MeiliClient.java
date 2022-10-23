@@ -1,6 +1,7 @@
 package org.raissi.meilisearch.client;
 
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
+import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
@@ -31,4 +32,5 @@ public interface MeiliClient {
 
     <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override);
 
+    <T> Try<CanBlockOnTask> upsert(UpsertDocuments<T> upsert);
 }

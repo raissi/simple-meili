@@ -12,7 +12,6 @@ import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.model.Movie;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -47,10 +46,9 @@ public class AppTest {
                 .ifSuccess(System.out::println)
                 .ifFailure(Throwable::printStackTrace);
 
-
         OverrideDocuments<Movie> overrideMovies = MeiliQueryBuilder.intoIndex("movies3").overrideDocuments(movies).withPrimaryKey("id");
         client.override(overrideMovies)
-                .andThen(CanBlockOnTask::waitFroCompletion)
+                .andThen(CanBlockOnTask::waitForCompletion)
                 .ifFailure(Throwable::printStackTrace)
                 .ifSuccess(lastStatus -> System.out.println(lastStatus.getStatus()));
 

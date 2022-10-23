@@ -3,6 +3,7 @@ package org.raissi.meilisearch.client.response.handler;
 import org.raissi.meilisearch.client.MeiliClient;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.tasks.GetTask;
+import org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
 import org.raissi.meilisearch.client.response.model.MeiliWriteResponse;
 import org.raissi.meilisearch.control.Try;
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse.TASK_SUCCEEDED;
 
 /**
  * This is a very simple Task wating capable handler. Should be replaced with more robust one
@@ -35,28 +38,28 @@ public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
 
     @Override
     public String index() {
-        return writeResponse.getIndexUid();
+        return writeResponse.index();
     }
 
     @Override
     public String initialTaskStatus() {
-        return writeResponse.getStatus();
+        return writeResponse.initialTaskStatus();
     }
 
     @Override
     public ZonedDateTime enqueuedAt() {
-        return writeResponse.getEnqueuedAt();
+        return writeResponse.enqueuedAt();
     }
 
     @Override
     public String writeType() {
-        return writeResponse.getWriteType();
+        return writeResponse.writeType();
     }
 
     @Override
-    public Try<MeiliTask> waitFroCompletion() {
-        String status = writeResponse.getStatus();
-        logger.debug("Starting to fetch status for task {} current status is {}", taskId(), status);
+    public Try<MeiliTask> waitForCompletion() {
+        String status = writeResponse.initialTaskStatus();
+        logger.debug("Starting to fetch status for task {} current status is {} (operation is: {})", taskId(), status, writeType());
         GetTask getTask = MeiliQueryBuilder.forTask(taskId());
         AtomicReference<Optional<Exception>> exceptionGettingStatus = new AtomicReference<>(Optional.empty());
         Try<MeiliTask> currentTask = Try.success(asMeiliTask());
@@ -79,7 +82,7 @@ public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
                 .orElse(currentTask);
     }
     private boolean isComplete(String status) {
-        return "succeeded".equals(status) || "failed".equals(status);
+        return TASK_SUCCEEDED.equals(status) || TASK_FAILED.equals(status);
     }
 
     private MeiliTask asMeiliTask() {
