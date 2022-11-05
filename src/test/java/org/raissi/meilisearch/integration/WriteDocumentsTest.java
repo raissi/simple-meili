@@ -10,12 +10,11 @@ import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
-import org.raissi.meilisearch.client.response.SearchResponse;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
+import org.raissi.meilisearch.client.response.model.GetResults;
 import org.raissi.meilisearch.model.Author;
-import org.raissi.meilisearch.model.Movie;
 
 import java.util.Collections;
 import java.util.List;
@@ -102,7 +101,7 @@ public class WriteDocumentsTest {
 
         GetDocuments getAuthors = MeiliQueryBuilder.fromIndex(indexName).get();
         List<Author> authorsFromIndex = client.get(getAuthors, Author.class)
-                .andThenTry(SearchResponse::list)
+                .andThenTry(GetResults::getResults)
                 .orElse(Collections::emptyList);
 
         Assertions.assertAll("Should have deleted country values",
@@ -150,6 +149,7 @@ public class WriteDocumentsTest {
         flaubert.setUid("3");
         flaubert.setName("Gustave Flaubert");
         flaubert.setCountry("France");
+
 
         return List.of(austen, dickens, flaubert);
     }

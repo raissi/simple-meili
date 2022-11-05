@@ -22,7 +22,7 @@ public class GetDocumentsResponseHandler implements ResponseHandler {
     @Override
     public Optional<MeiliSearchException> buildException(int code, String calledResource, Map<String, List<String>> responseHeaders, String respBody) {
         if(code == 404) {
-            logger.error("404 - Could not find documents at: {}. Server responded with: {}", get.path(), respBody);
+            logger.error("404 - Could not find documents at: '{}'. Server responded with: {}", get.path(), respBody);
             return Optional.of(new NotFoundException(calledResource, respBody));
         }
         return Optional.of(new MeiliSearchException("Got error "+code+" not yet handled. Body is: "+respBody));

@@ -5,10 +5,7 @@ import org.raissi.meilisearch.client.querybuilder.insert.DefaultOverrideDocument
 import org.raissi.meilisearch.client.querybuilder.insert.DefaultUpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
-import org.raissi.meilisearch.client.querybuilder.search.DefaultGetDocument;
-import org.raissi.meilisearch.client.querybuilder.search.DefaultGetDocuments;
-import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
-import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
+import org.raissi.meilisearch.client.querybuilder.search.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,6 +15,7 @@ import java.util.stream.Stream;
 
 public class DefaultQueryBuilder implements FromIndex, IntoIndex {
 
+    public static final String SEARCH_PHRASE_DELIM = "\"";
     private final String index;
 
     public DefaultQueryBuilder(String index) {
@@ -34,6 +32,32 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     @Override
     public GetDocument get(String documentId) {
         return new DefaultGetDocument(index, documentId);
+    }
+
+    @Override
+    public SearchRequest q(String q) {
+        return new DefaultSearchRequest(index).q(q);
+    }
+
+    @Override
+    public SearchRequest phrase(String phrase) {
+        String surroundedPhrase;
+        if (!phrase.startsWith(SEARCH_PHRASE_DELIM)) {
+            surroundedPhrase = SEARCH_PHRASE_DELIM +phrase+ SEARCH_PHRASE_DELIM;
+        } else {
+            surroundedPhrase = phrase;
+        }
+        return new DefaultSearchRequest(index).q(surroundedPhrase);
+    }
+
+    @Override
+    public SearchRequest filter(String filter) {
+        return new DefaultSearchRequest(index).filter(filter);
+    }
+
+    @Override
+    public SearchRequest filters(Collection<String> filters) {
+        return new DefaultSearchRequest(index).filters(filters);
     }
 
     @Override

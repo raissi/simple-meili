@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * This is a very simple Task wating capable handler. Should be replaced with more robust one
+ * This is a very simple Task waiting capable handler. Should be replaced with more robust one
  */
 public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
 
@@ -76,7 +76,8 @@ public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
 
         return exceptionGettingStatus.get()
                 .map(Try::<MeiliTask>failure)
-                .orElse(currentTask);
+                .orElse(currentTask)
+                .andThen(MeiliTask::extractError);
     }
     private boolean isComplete(String status) {
         return TASK_SUCCEEDED.equals(status) || TASK_FAILED.equals(status);

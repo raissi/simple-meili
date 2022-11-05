@@ -1,23 +1,14 @@
 package org.raissi.meilisearch.client.response.model;
 
+import lombok.Data;
+
+@Data
 public class MeiliTaskDetails {
     private Integer receivedDocumentIds;
     private Integer deletedDocuments;
 
+    //For index tasks
+    private Integer receivedDocuments;
+    private Integer indexedDocuments;
 
-    public Integer getReceivedDocumentIds() {
-        return receivedDocumentIds;
-    }
-
-    public void setReceivedDocumentIds(Integer receivedDocumentIds) {
-        this.receivedDocumentIds = receivedDocumentIds;
-    }
-
-    public Integer getDeletedDocuments() {
-        return deletedDocuments;
-    }
-
-    public void setDeletedDocuments(Integer deletedDocuments) {
-        this.deletedDocuments = deletedDocuments;
-    }
 }

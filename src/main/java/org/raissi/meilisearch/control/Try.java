@@ -70,6 +70,7 @@ public interface Try<T> {
      * @return a succeeded or failed {@code Try}; never {@code null}
      */
     Try<T> orElseTry(Callable<T> action);
+
     /**
      * If this {@code Try} is a failure, call the supplied supplier and return
      * the resulting {@code Try}; if this {@code Try} is a success, do nothing.
@@ -78,6 +79,16 @@ public interface Try<T> {
      * @return a succeeded or failed {@code Try}; never {@code null}
      */
     T orElse(Supplier<T> supplier);
+
+    /**
+     * If this {@code Try} is a failure, call the supplied mapper and throws
+     * the resulting {@code X}; if this {@code Try} is a success, returns the success value.
+     *
+     * @param exceptionMapper the supplier to call; must not be {@code null}
+     * @return the encapsulated value or throws {@code X}
+     */
+
+    <X extends Exception> T orElseThrow(Function<Exception, X> exceptionMapper) throws X;
 
     /**
      * A transformer for values of type {@code S} to type {@code T}.
@@ -143,6 +154,11 @@ public interface Try<T> {
         public V orElse(Supplier<V> supplier) {
             return this.value;
         }
+
+        @Override
+        public <X extends Exception> V orElseThrow(Function<Exception, X> exceptionMapper) throws X {
+            return this.value;
+        }
     }
 
     class Failure<V> implements Try<V> {
@@ -200,6 +216,11 @@ public interface Try<T> {
         public V orElse(Supplier<V> supplier) {
             Objects.requireNonNull(supplier, "supplier is null");
             return supplier.get();
+        }
+
+        @Override
+        public <X extends Exception> V orElseThrow(Function<Exception, X> exceptionMapper) throws X {
+            throw exceptionMapper.apply(this.cause);
         }
     }
 }

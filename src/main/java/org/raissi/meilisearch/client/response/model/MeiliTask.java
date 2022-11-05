@@ -2,11 +2,15 @@ package org.raissi.meilisearch.client.response.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import org.raissi.meilisearch.client.response.exceptions.MeiliSearchException;
+import org.raissi.meilisearch.control.Try;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
 public class MeiliTask {
     /*
     TODO
@@ -34,75 +38,13 @@ public class MeiliTask {
     private MeiliError error;
     private MeiliTaskDetails details;
 
-    public String getUid() {
-        return uid;
-    }
-
-    public void setUid(String uid) {
-        this.uid = uid;
-    }
-
-    public String getIndex() {
-        return index;
-    }
-
-    public void setIndex(String index) {
-        this.index = index;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getOperationType() {
-        return operationType;
-    }
-
-    public void setOperationType(String operationType) {
-        this.operationType = operationType;
-    }
-
-    public ZonedDateTime getEnqueuedAt() {
-        return enqueuedAt;
-    }
-
-    public void setEnqueuedAt(ZonedDateTime enqueuedAt) {
-        this.enqueuedAt = enqueuedAt;
-    }
-
-    public ZonedDateTime getStartedAt() {
-        return startedAt;
-    }
-
-    public void setStartedAt(ZonedDateTime startedAt) {
-        this.startedAt = startedAt;
-    }
-
-    public ZonedDateTime getFinishedAt() {
-        return finishedAt;
-    }
-
-    public void setFinishedAt(ZonedDateTime finishedAt) {
-        this.finishedAt = finishedAt;
-    }
-
     public Optional<MeiliError> getError() {
         return Optional.ofNullable(error);
     }
 
-    public void setError(MeiliError error) {
-        this.error = error;
-    }
+    public Try<MeiliTask> extractError() {
+        return getError().map(e -> Try.<MeiliTask>failure(new MeiliSearchException(e.getMessage())))//TODO exception should contain all details
+                .orElseGet(() -> Try.success(this));
 
-    public MeiliTaskDetails getDetails() {
-        return details;
-    }
-
-    public void setDetails(MeiliTaskDetails details) {
-        this.details = details;
     }
 }

@@ -1,5 +1,7 @@
 package org.raissi.meilisearch;
 
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.relation.Relation;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.Test;
 import org.raissi.meilisearch.client.MeiliClient;
@@ -9,7 +11,9 @@ import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
+import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
+import org.raissi.meilisearch.control.Try;
 import org.raissi.meilisearch.model.Movie;
 
 import java.util.List;
@@ -34,7 +38,7 @@ public class AppTest {
         List<Movie> movies = client.get(getMovies, Movie.class)
                 .ifFailure(Throwable::printStackTrace)
                 .orElse(() -> null)
-                .list();
+                .getResults();
 
         GetDocument getMovie = MeiliQueryBuilder.fromIndex("movies").get("2aaaaa");
         client.get(getMovie, Movie.class)
@@ -51,6 +55,17 @@ public class AppTest {
                 .andThen(CanBlockOnTask::waitForCompletion)
                 .ifFailure(Throwable::printStackTrace)
                 .ifSuccess(lastStatus -> System.out.println(lastStatus.getStatus()));
+
+        SearchRequest search = MeiliQueryBuilder.fromIndex("movies")
+                .q("shifu")
+                .filter("(genres = horror OR genres = mystery) ")
+                ;
+
+        Try<String> searchResults = client.search(search)
+                .ifSuccess(System.out::println)
+                .ifFailure(Throwable::printStackTrace);
+
+        System.out.println(searchResults);
 
 
 

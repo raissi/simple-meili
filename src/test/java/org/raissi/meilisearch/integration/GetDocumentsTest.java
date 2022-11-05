@@ -10,8 +10,7 @@ import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
-import org.raissi.meilisearch.client.response.SearchResponse;
-import org.raissi.meilisearch.client.response.model.SearchResults;
+import org.raissi.meilisearch.client.response.model.GetResults;
 import org.raissi.meilisearch.model.Movie;
 
 import java.util.Arrays;
@@ -37,7 +36,7 @@ public class GetDocumentsTest {
         AtomicBoolean isSuccess = new AtomicBoolean(false);
         GetDocuments getMovies = MeiliQueryBuilder.fromIndex("moviesInvalidIndex").get();
         client.get(getMovies, Movie.class)
-                .andThenTry(SearchResponse::list)
+                .andThenTry(GetResults::getResults)
                 .ifSuccess(s -> isSuccess.set(true))
                 .ifFailure(s -> isSuccess.set(false));
 
@@ -59,16 +58,15 @@ public class GetDocumentsTest {
     public void shouldGetListOfMovies() {
         AtomicBoolean isSuccess = new AtomicBoolean(false);
         GetDocuments getMovies = MeiliQueryBuilder.fromIndex("movies").get();
-        SearchResults<Movie> searchResults = client.get(getMovies, Movie.class)
+        GetResults<Movie> getResults = client.get(getMovies, Movie.class)
                 .ifSuccess(s -> isSuccess.set(true))
                 .ifFailure(s -> isSuccess.set(false))
-                .orElse(() -> null)
-                .searchResults();
+                .orElse(() -> null);
 
         Assertions.assertTrue(isSuccess.get(), "Get documents should execute");
-        Assertions.assertTrue(searchResults.getTotal() > 0);
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertTrue(getResults.getTotal() > 0);
+        Assertions.assertEquals(0, getResults.getOffset());
+        Assertions.assertEquals(20, getResults.getLimit());
     }
 
     @Test
@@ -119,7 +117,7 @@ public class GetDocumentsTest {
         AtomicBoolean isSuccess = new AtomicBoolean(false);
         GetDocuments getMovies = MeiliQueryBuilder.fromIndex("moviesInvalidIndex").get();
         client.get(getMovies, Movie.class)
-                .andThenTry(SearchResponse::list)
+                .andThenTry(GetResults::getResults)
                 .ifSuccess(s -> isSuccess.set(true))
                 .ifFailure(s -> isSuccess.set(false));
 
@@ -130,7 +128,7 @@ public class GetDocumentsTest {
     public void getListOfMoviesLimited() {
         GetDocuments getMovies = MeiliQueryBuilder.fromIndex("movies").get().fetch(3);
         List<Movie> movies = client.get(getMovies, Movie.class)
-                .andThenTry(SearchResponse::list)
+                .andThenTry(GetResults::getResults)
                 .orElse(Collections::emptyList);
 
         Assertions.assertEquals(3, movies.size(), "Limit was 3");
@@ -141,7 +139,7 @@ public class GetDocumentsTest {
         GetDocuments getMovies = MeiliQueryBuilder.fromIndex("movies").get()
                             .fetch(5).fetchOnly(Arrays.asList("id", "title"));
         List<Movie> movies = client.get(getMovies, Movie.class)
-                .andThenTry(SearchResponse::list)
+                .andThenTry(GetResults::getResults)
                 .orElse(Collections::emptyList);
 
         Assertions.assertAll("Should not return overview field",

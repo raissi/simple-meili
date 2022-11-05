@@ -9,10 +9,12 @@ import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
+import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.querybuilder.tasks.GetTask;
-import org.raissi.meilisearch.client.response.SearchResponse;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
+import org.raissi.meilisearch.client.response.model.GetResults;
+import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.control.Try;
 
 import java.util.Collection;
@@ -29,11 +31,15 @@ public interface MeiliClient {
 
     Try<Optional<String>> get(GetDocumentIgnoreNotFound get);
 
-    <T> Try<SearchResponse<T>> get(GetDocuments get, Class<T> resultType);
+    <T> Try<GetResults<T>> get(GetDocuments get, Class<T> resultType);
 
     <T> Try<T> get(GetDocument get, Class<T> resultType);
 
     <T> Try<Optional<T>> get(GetDocumentIgnoreNotFound get, Class<T> resultType);
+
+    <T> Try<SearchResponse<T>> search(SearchRequest request, Class<T> resultType);
+
+    Try<String> search(SearchRequest search);
 
     <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override);
 

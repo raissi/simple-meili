@@ -12,17 +12,14 @@ import org.raissi.meilisearch.client.querybuilder.delete.DeleteOneDocument;
 import org.raissi.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.insert.WriteRequest;
-import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
-import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
-import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
-import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
+import org.raissi.meilisearch.client.querybuilder.search.*;
 import org.raissi.meilisearch.client.querybuilder.tasks.GetTask;
-import org.raissi.meilisearch.client.response.SearchResponse;
 import org.raissi.meilisearch.client.response.exceptions.MeiliSearchException;
 import org.raissi.meilisearch.client.response.handler.*;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
 import org.raissi.meilisearch.client.response.model.MeiliWriteResponse;
-import org.raissi.meilisearch.client.response.model.SearchResults;
+import org.raissi.meilisearch.client.response.model.GetResults;
+import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.control.Try;
 
 import java.io.IOException;
@@ -91,9 +88,9 @@ public class MeiliClientOkHttp implements MeiliClient {
     }
 
     @Override
-    public <T> Try<SearchResponse<T>> get(GetDocuments get, Class<T> resultType) {
+    public <T> Try<GetResults<T>> get(GetDocuments get, Class<T> resultType) {
         return get(get)
-                .andThenTry(responseBody -> parse(resultType, responseBody));
+                .andThenTry(responseBody -> parseGetResults(responseBody, resultType));
     }
 
     @Override
@@ -113,8 +110,26 @@ public class MeiliClientOkHttp implements MeiliClient {
                 });
     }
 
-    //TODO check whether to overload with a callback method
+    @Override
+    public <T> Try<SearchResponse<T>> search(SearchRequest request, Class<T> resultType) {
+        return search(request)
+                .andThenTry(rawResponse -> parseSearchResults(rawResponse, resultType));
+    }
+    @Override
+    public Try<String> search(SearchRequest searchRequest) {
+        String path = searchRequest.path();
+        HttpUrl url = url(Map.of(), path);
 
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", MeiliClientOkHttp.BEARER + searchKey)
+                .post(RequestBody.create(searchRequest.json(), JSON))
+                .build();
+
+        return Try.of(() -> executeAndThrowIfEmptyException(request, new DefaultMeiliErrorHandler(searchRequest)));
+    }
+
+    //TODO check whether to overload with a callback method
     @Override
     public <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override) {
         Function<Request.Builder, Request> methodBuilder = builder -> builder.post(RequestBody.create(override.json(), JSON))
@@ -182,17 +197,18 @@ public class MeiliClientOkHttp implements MeiliClient {
         return deleteByIds(byIds);
     }
 
-    private <T, X extends WriteCanDefinePrimaryKey<T, X>> Try<CanBlockOnTask> write(WriteCanDefinePrimaryKey<T, X> write, Function<Request.Builder, Request> methodBuilder) {
+    private <T, X extends WriteCanDefinePrimaryKey<T, X>> Try<CanBlockOnTask> write(WriteCanDefinePrimaryKey<T, X> write,
+                                                                                    Function<Request.Builder, Request> methodBuilder) {
         Map<String, String> params = write.primaryKey()
                 .map(p -> Map.of("primaryKey", p))
                 .orElse(Map.of());
         return write(write, methodBuilder, params);
     }
 
-    private Try<CanBlockOnTask> write(WriteRequest override,
+    private Try<CanBlockOnTask> write(WriteRequest write,
                                       Function<Request.Builder, Request> methodBuilder,
                                       Map<String, String> params) {
-        String path = override.path();
+        String path = write.path();
         HttpUrl url = url(params, path);
 
         Request.Builder requestBuilder = new Request.Builder()
@@ -201,13 +217,13 @@ public class MeiliClientOkHttp implements MeiliClient {
 
         Request request = methodBuilder.apply(requestBuilder);
 
-        return Try.of(() -> executeAndThrowIfEmptyException(request, new DefaultMeiliErrorHandler(override)))
+        return Try.of(() -> executeAndThrowIfEmptyException(request, new DefaultMeiliErrorHandler(write)))
                 .andThenTry(rawResponse -> objectMapper.readValue(rawResponse, MeiliWriteResponse.class))
                 .andThenTry(writeResponse -> new SimpleBlockingCapableTaskHandler(writeResponse, this));
     }
 
 
-    private <G extends SearchRequest<G>> Try<String> get(SearchRequest<G> get, ResponseHandler responseHandler) {
+    private <G extends FetchFieldsRequest<G>> Try<String> get(FetchFieldsRequest<G> get, ResponseHandler responseHandler) {
         Map<String, String> queryParams = Collections.singletonMap("fields", get.fields());
         String path = get.path();
 
@@ -269,10 +285,14 @@ public class MeiliClientOkHttp implements MeiliClient {
         return responseHandler.buildException(response.code(), calledResource, responseHeaders, respBody);
     }
 
-    private <T> SearchResponse<T> parse(Class<T> resultType, String responseBody) throws Exception {
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(SearchResults.class, resultType);
-        SearchResults<T> results = objectMapper.readValue(responseBody, type);
-        return new SearchResponse<>(results);
+    private <T> GetResults<T> parseGetResults(String responseBody, Class<T> resultType) throws Exception {
+        JavaType type = objectMapper.getTypeFactory().constructParametricType(GetResults.class, resultType);
+        return objectMapper.readValue(responseBody, type);
+    }
+
+    private <T> SearchResponse<T> parseSearchResults(String responseBody, Class<T> resultType) throws Exception {
+        JavaType type = objectMapper.getTypeFactory().constructParametricType(SearchResponse.class, resultType);
+        return objectMapper.readValue(responseBody, type);
     }
 
 

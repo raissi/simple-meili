@@ -1,8 +1,6 @@
 package org.raissi.meilisearch.client.querybuilder.search;
 
-import java.util.Optional;
-
-public interface GetDocument extends SearchRequest<GetDocument> {
+public interface GetDocument extends FetchFieldsRequest<GetDocument> {
 
 
     /**
