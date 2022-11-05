@@ -2,16 +2,19 @@ package org.raissi.meilisearch.client.querybuilder.search;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Value;
 
 import java.util.*;
 
-public class DefaultSearchRequest extends BaseGet implements SearchRequest { //TODO add BasePaging
+public class DefaultSearchRequest extends BaseGet implements SearchRequest, SearchRequest.AroundPoint { //TODO add BasePaging
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String query;
     private int offset = 0;
     private int limit = 20;
-    private List<String> filters;
+    private final List<String> filters;
+
+    private GeoPoint aroundPoint;
 
     public DefaultSearchRequest(String index) {
         super("/indexes/" + index + "/search");
@@ -75,6 +78,12 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest { //T
     }
 
     @Override
+    public AroundPoint aroundPoint(double lat, double lon) {
+        this.aroundPoint = new GeoPoint(lat, lon);
+        return this;
+    }
+
+    @Override
     public String query() {
         return query;
     }
@@ -99,5 +108,17 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest { //T
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public SearchRequest withinDistanceInMeters(int distanceInMeters) {
+        String geoFilter = "_geoRadius(" + aroundPoint.getLat() + ", " + aroundPoint.getLon() + ", " + distanceInMeters + ")";
+        return this.filter(geoFilter);
+    }
+
+    @Value
+    static class GeoPoint {
+        double lat;
+        double lon;
     }
 }

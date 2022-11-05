@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DefaultQueryBuilder implements FromIndex, IntoIndex {
 
@@ -58,6 +57,11 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     @Override
     public SearchRequest filters(Collection<String> filters) {
         return new DefaultSearchRequest(index).filters(filters);
+    }
+
+    @Override
+    public SearchRequest.AroundPoint aroundPoint(double lat, double lon) {
+        return new DefaultSearchRequest(index).aroundPoint(lat, lon);
     }
 
     @Override

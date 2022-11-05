@@ -21,6 +21,8 @@ import org.raissi.meilisearch.client.response.model.MeiliWriteResponse;
 import org.raissi.meilisearch.client.response.model.GetResults;
 import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.control.Try;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -28,6 +30,7 @@ import java.util.function.Function;
 
 public class MeiliClientOkHttp implements MeiliClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(MeiliClientOkHttp.class);
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final String BEARER = "Bearer ";
 
@@ -120,10 +123,12 @@ public class MeiliClientOkHttp implements MeiliClient {
         String path = searchRequest.path();
         HttpUrl url = url(Map.of(), path);
 
+        String searchJson = searchRequest.json();
+        logger.debug("Searching in {}, query: {}", url, searchJson);
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Authorization", MeiliClientOkHttp.BEARER + searchKey)
-                .post(RequestBody.create(searchRequest.json(), JSON))
+                .post(RequestBody.create(searchJson, JSON))
                 .build();
 
         return Try.of(() -> executeAndThrowIfEmptyException(request, new DefaultMeiliErrorHandler(searchRequest)));

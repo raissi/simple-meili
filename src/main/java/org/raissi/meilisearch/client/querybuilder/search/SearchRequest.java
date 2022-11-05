@@ -15,6 +15,12 @@ public interface SearchRequest extends PagingRequest<SearchRequest>, HasBody {
     SearchRequest facet(String facet);
     SearchRequest facets(Collection<String> facets);
 
+    AroundPoint aroundPoint(double lat, double lon);
+
     String query();
     List<String> filters();
+
+    interface AroundPoint {
+        SearchRequest withinDistanceInMeters(int distanceInMeters);
+    }
 }

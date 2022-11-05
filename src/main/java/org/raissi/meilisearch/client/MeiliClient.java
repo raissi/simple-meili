@@ -22,6 +22,8 @@ import java.util.Optional;
 
 public interface MeiliClient {
 
+    //TODO split into Admin vs Search Clients
+
 
     Try<String> get(GetDocuments get);
 

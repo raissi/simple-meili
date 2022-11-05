@@ -48,7 +48,7 @@ public class SearchDocumentsTest {
         Request request = new Request.Builder()
                 .url("http://localhost:7700/indexes/"+indexName+"/settings/filterable-attributes")
                 .addHeader("Authorization", "Bearer masterKey")
-                .put(RequestBody.create("[\"country\"]", JSON))
+                .put(RequestBody.create("[\"country\", \"uid\"]", JSON))
                 .build();
 
         try (Response response = okHttpClient.newCall(request).execute()) {
@@ -183,6 +183,69 @@ public class SearchDocumentsTest {
         Assertions.assertEquals(20, searchResults.getLimit());
     }
 
+    @Test
+    void shouldSearch_UsingMultipleFilters() {
+
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .filter("country = England")
+                .filter("uid = 1");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        SearchResponse<Author> searchResults = client.search(search, Author.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .orElse(() -> null);
+
+        Assertions.assertTrue(isSuccess.get(), "Search should execute");
+        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
+    }
+
+    @Test
+    void shouldSearch_UsingSingleFilter() {
+
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .filter("country = England AND uid = 1");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        SearchResponse<Author> searchResults = client.search(search, Author.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .orElse(() -> null);
+
+        Assertions.assertTrue(isSuccess.get(), "Search should execute");
+        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
+    }
+
+    @Test
+    void shouldSearch_UsingFilterAndQuery() {
+
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .filter("country = England AND uid = 1")
+                .q("austen");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        SearchResponse<Author> searchResults = client.search(search, Author.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .orElse(() -> null);
+
+        Assertions.assertTrue(isSuccess.get(), "Search should execute");
+        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
+    }
+
+    @Test
+    void shouldSearch_UsingFilterAndQuery_noResult() {
+
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .filter("country = England AND uid = 1")
+                .q("charles");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        SearchResponse<Author> searchResults = client.search(search, Author.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .orElse(() -> null);
+
+        Assertions.assertTrue(isSuccess.get(), "Search should execute");
+        Assertions.assertEquals(0, searchResults.getEstimatedTotalHits(), "Must find none");
+
+    }
     public static List<Author> authors() {
         Author austen = new Author();
         austen.setUid("1");

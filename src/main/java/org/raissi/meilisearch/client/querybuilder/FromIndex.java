@@ -25,6 +25,8 @@ public interface FromIndex {
     SearchRequest filter(String filter);
     SearchRequest filters(Collection<String> filters);
 
+    SearchRequest.AroundPoint aroundPoint(double lat, double lon);
+
 
     DeleteAllDocuments deleteAll();
     <T> DeleteOneDocument delete(T uid);
