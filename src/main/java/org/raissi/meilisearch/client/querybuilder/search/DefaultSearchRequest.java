@@ -6,13 +6,23 @@ import lombok.Value;
 
 import java.util.*;
 
+import static java.util.Collections.singleton;
+import static java.util.Optional.ofNullable;
+
 public class DefaultSearchRequest extends BaseGet implements SearchRequest, SearchRequest.AroundPoint { //TODO add BasePaging
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private String query;
     private int offset = 0;
     private int limit = 20;
     private final List<String> filters;
+
+    private Set<String> attributesToRetrieve = singleton("*");
+    private Set<String> attributesToCrop;
+
+    private Integer cropLength;
+
+    private String cropMarker = "…";
 
     private GeoPoint aroundPoint;
 
@@ -56,7 +66,10 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
     @Override
     public SearchRequest filter(String filter) {
-        this.filters.add(filter);
+        Objects.requireNonNull(filter);
+        if(!filter.isEmpty()) {
+            this.filters.add(filter);
+        }
         return this;
     }
 
@@ -64,6 +77,12 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     public SearchRequest filters(Collection<String> filters) {
         Objects.requireNonNull(filters);
         this.filters.addAll(filters);
+        return this;
+    }
+
+    @Override
+    public SearchRequest clearFilters() {
+        this.filters.clear();
         return this;
     }
 
@@ -78,31 +97,60 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     }
 
     @Override
+    public SearchRequest retrieveAttributes(Collection<String> attributesToRetrieve) {
+        Collection<String> attrsOrElseStar = ofNullable(attributesToRetrieve)
+                .filter(c -> !c.isEmpty())
+                .orElseGet(() -> singleton("*"));
+        this.attributesToRetrieve = new HashSet<>(attrsOrElseStar);
+        return this;
+    }
+
+    @Override
+    public SearchRequest cropAttributes(Collection<String> attributesToCrop) {
+        Collection<String> attrs = ofNullable(attributesToCrop).orElseGet(Collections::emptyList);
+        this.attributesToCrop = new HashSet<>(attrs);
+        return this;
+    }
+
+    @Override
+    public SearchRequest cropLength(int cropLength) {
+        if(cropLength > 0) {
+            this.cropLength = cropLength;
+        }
+        return this;
+    }
+
+    @Override
+    public SearchRequest markCropBoundariesWith(String cropMarker) {
+        this.cropMarker = cropMarker;
+        return this;
+    }
+
+    @Override
     public AroundPoint aroundPoint(double lat, double lon) {
         this.aroundPoint = new GeoPoint(lat, lon);
         return this;
     }
 
     @Override
-    public String query() {
-        return query;
-    }
-
-    @Override
-    public List<String> filters() {
-        return filters;
-    }
-
-    @Override
     public String json() {
         Map<String, Object> body = new HashMap<>();
-        Optional.ofNullable(query())
+        ofNullable(query)
                 .filter(s -> !s.isBlank())
                 .ifPresent(s -> body.put("q", s));
 
-        Optional.of(filters())
+        Optional.of(this.filters)
                 .filter(l -> !l.isEmpty())
                 .ifPresent(l -> body.put("filter", l));
+
+        body.put("attributesToRetrieve", attributesToRetrieve);
+        Optional.ofNullable(this.attributesToCrop)
+                .filter(l -> !l.isEmpty())
+                .ifPresent(l -> body.put("attributesToCrop", l));
+        ofNullable(cropLength)
+                .ifPresent(length -> body.put("cropLength", length));
+        body.put("cropMarker", cropMarker);
+
         try {
             return objectMapper.writeValueAsString(body);
         } catch (JsonProcessingException e) {

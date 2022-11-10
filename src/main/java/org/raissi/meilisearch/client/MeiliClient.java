@@ -55,11 +55,11 @@ public interface MeiliClient {
 
     Try<CanBlockOnTask> deleteOne(DeleteOneDocument deleteOne);
 
-    <T> Try<CanBlockOnTask> deleteAll(DeleteAllDocuments deleteAll);
+    Try<CanBlockOnTask> deleteAll(DeleteAllDocuments deleteAll);
 
-    <T> Try<CanBlockOnTask> deleteAll(String index);
+    Try<CanBlockOnTask> deleteAll(String index);
 
-    <T> Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds);
+    Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds);
 
     <T> Try<CanBlockOnTask> deleteByIds(String index, Collection<T> ids);
 }

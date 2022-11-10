@@ -60,6 +60,26 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     }
 
     @Override
+    public SearchRequest retrieveAttributes(Collection<String> attributesToRetrieve) {
+        return new DefaultSearchRequest(index).retrieveAttributes(attributesToRetrieve);
+    }
+
+    @Override
+    public SearchRequest cropAttributes(Collection<String> attributesToCrop) {
+        return new DefaultSearchRequest(index).cropAttributes(attributesToCrop);
+    }
+
+    @Override
+    public SearchRequest cropLength(int cropLength) {
+        return new DefaultSearchRequest(index).cropLength(cropLength);
+    }
+
+    @Override
+    public SearchRequest markCropBoundariesWith(String cropMarker) {
+        return new DefaultSearchRequest(index).markCropBoundariesWith(cropMarker);
+    }
+
+    @Override
     public SearchRequest.AroundPoint aroundPoint(double lat, double lon) {
         return new DefaultSearchRequest(index).aroundPoint(lat, lon);
     }

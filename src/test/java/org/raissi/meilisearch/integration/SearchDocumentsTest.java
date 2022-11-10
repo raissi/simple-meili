@@ -17,6 +17,7 @@ import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.model.Author;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -55,6 +56,7 @@ public class SearchDocumentsTest {
             if (!response.isSuccessful()) {
                 throw new RuntimeException();
             }
+            Thread.sleep(300);
         }
     }
 
@@ -244,7 +246,21 @@ public class SearchDocumentsTest {
 
         Assertions.assertTrue(isSuccess.get(), "Search should execute");
         Assertions.assertEquals(0, searchResults.getEstimatedTotalHits(), "Must find none");
+    }
 
+    @Test
+    void shouldSearch_GettingSubsetOfAttributes() {
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .filter("country = England")
+                .retrieveAttributes(Arrays.asList("uid", "name"));//Otherwise AuthorNoCountry will not be deserialized
+
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        client.search(search, Author.AuthorNoCountry.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .ifFailure(Throwable::printStackTrace);
+
+        Assertions.assertTrue(isSuccess.get(), "Search should execute");
     }
     public static List<Author> authors() {
         Author austen = new Author();

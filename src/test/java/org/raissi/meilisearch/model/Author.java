@@ -10,8 +10,11 @@ public class Author {
     }
 
     public static class AuthorNoCountry {
-        private final String uid;
-        private final String name;
+        private String uid;
+        private String name;
+
+        private AuthorNoCountry() {
+        }
 
         public AuthorNoCountry(Author author) {
             this.uid = author.getUid();

@@ -25,6 +25,11 @@ public interface FromIndex {
     SearchRequest filter(String filter);
     SearchRequest filters(Collection<String> filters);
 
+    SearchRequest retrieveAttributes(Collection<String> attributesToRetrieve);
+    SearchRequest cropAttributes(Collection<String> attributesToCrop);
+    SearchRequest cropLength(int cropLength);
+    SearchRequest markCropBoundariesWith(String cropMarker);
+
     SearchRequest.AroundPoint aroundPoint(double lat, double lon);
 
 
