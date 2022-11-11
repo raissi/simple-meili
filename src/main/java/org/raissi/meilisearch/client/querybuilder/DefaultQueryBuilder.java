@@ -80,6 +80,26 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     }
 
     @Override
+    public SearchRequest sortBy(String field, SortOrder sortOrder) {
+        return new DefaultSearchRequest(index).sortBy(field, sortOrder);
+    }
+
+    @Override
+    public SearchRequest sortAscBy(String field) {
+        return new DefaultSearchRequest(index).sortAscBy(field);
+    }
+
+    @Override
+    public SearchRequest sortDescBy(String field) {
+        return new DefaultSearchRequest(index).sortDescBy(field);
+    }
+
+    @Override
+    public SearchRequest sortByDistanceFromPoint(double lat, double lon, SortOrder sortOrder) {
+        return new DefaultSearchRequest(index).sortByDistanceFromPoint(lat, lon, sortOrder);
+    }
+
+    @Override
     public SearchRequest.AroundPoint aroundPoint(double lat, double lon) {
         return new DefaultSearchRequest(index).aroundPoint(lat, lon);
     }

@@ -8,7 +8,9 @@ import java.util.Collection;
 public interface SearchRequest extends FromIndexSearch<SearchRequest>, PagingRequest<SearchRequest>, HasBody {
     //TODO add method to append query terms e.g: \"african american\" horror
 
-    SearchRequest q(String q);
+    SearchRequest appendToQuery(String q);
+
+    SearchRequest appendPhraseToQuery(String q);
 
     SearchRequest clearFilters();
 

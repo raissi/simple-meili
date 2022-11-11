@@ -7,6 +7,8 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Arrays;
 
+import static org.raissi.meilisearch.client.querybuilder.SortOrder.ASC;
+
 public class SearchRequestBuilderTest {
 
     @Test
@@ -16,6 +18,44 @@ public class SearchRequestBuilderTest {
                 .withinDistanceInMeters(2000)
                 .json();
         Assertions.assertTrue(queryJson.contains("_geoRadius(45.472735, 9.184019, 2000)"));
+    }
+
+    @Test
+    void shouldAddPhrase() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .phrase("some query")
+                .json();
+
+        JSONAssert.assertEquals("{\"q\": \"\\\"some query\\\"\"}", json, false);
+    }
+    @Test
+    void shouldAddPhrase_InsideRequest() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .phrase("some query")
+                .json();
+
+        JSONAssert.assertEquals("{\"q\": \"\\\"some query\\\"\"}", json, false);
+    }
+
+    @Test
+    void shouldAppendToQuery() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("hello")
+                .appendToQuery("world")
+                .json();
+
+        JSONAssert.assertEquals("{\"q\": \"hello world\"}", json, false);
+    }
+
+    @Test
+    void shouldAppendPhraseToQuery() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("hello")
+                .appendPhraseToQuery("you there")
+                .json();
+
+        JSONAssert.assertEquals("{\"q\": \"hello \\\"you there\\\"\"}", json, false);
     }
 
     @Test
@@ -79,10 +119,50 @@ public class SearchRequestBuilderTest {
     @Test
     void shouldSetMatchesPosition() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
-                .q("")
+                .q("search")
                 .showMatchesPosition(true)
                 .json();
 
         JSONAssert.assertEquals("{\"showMatchesPosition\":true}", json, false);
+    }
+
+    @Test
+    void shouldAddSort() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .sortAscBy("uid")
+                .json();
+
+        JSONAssert.assertEquals("{\"sort\":[\"uid:asc\"]}", json, false);
+    }
+
+    @Test
+    void shouldAddSort_Desc() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .sortDescBy("uid")
+                .json();
+
+        JSONAssert.assertEquals("{\"sort\":[\"uid:desc\"]}", json, false);
+    }
+
+    @Test
+    void shouldAddSort_InsideRequest() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("search")
+                .sortAscBy("uid")
+                .sortDescBy("name")
+                .json();
+
+        JSONAssert.assertEquals("{\"sort\":[\"uid:asc\", \"name:desc\"]}", json, false);
+    }
+
+    @Test
+    void shouldAddSort_WithGeoPoint_InsideRequest() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("search")
+                .sortAscBy("uid")
+                .sortByDistanceFromPoint(48.8561446, 2.2978204, ASC)
+                .json();
+
+        JSONAssert.assertEquals("{\"sort\":[\"uid:asc\", \"_geoPoint(48.8561446, 2.2978204):asc\"]}", json, false);
     }
 }

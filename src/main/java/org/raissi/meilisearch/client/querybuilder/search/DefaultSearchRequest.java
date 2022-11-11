@@ -3,6 +3,7 @@ package org.raissi.meilisearch.client.querybuilder.search;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Value;
+import org.raissi.meilisearch.client.querybuilder.SortOrder;
 
 import java.util.*;
 
@@ -34,11 +35,14 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
     private boolean showMatchesPosition;
 
+    private List<String> sort;
+
     private GeoPoint aroundPoint;
 
     public DefaultSearchRequest(String index) {
         super("/indexes/" + index + "/search");
         filters = new ArrayList<>();
+        sort = new ArrayList<>();
     }
 
     @Override
@@ -76,13 +80,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
     @Override
     public SearchRequest phrase(String phrase) {
-        String surroundedPhrase;
-        if (!phrase.startsWith(SEARCH_PHRASE_DELIM)) {
-            surroundedPhrase = SEARCH_PHRASE_DELIM +phrase+ SEARCH_PHRASE_DELIM;
-        } else {
-            surroundedPhrase = phrase;
-        }
-        this.query = surroundedPhrase;
+        this.query = surroundPhrase(phrase);
         return this;
     }
 
@@ -99,6 +97,23 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     public SearchRequest filters(Collection<String> filters) {
         Objects.requireNonNull(filters);
         this.filters.addAll(filters);
+        return this;
+    }
+
+    @Override
+    public SearchRequest appendToQuery(String q) {
+        this.query = Optional.ofNullable(this.query)
+                .map(existingQuery -> existingQuery + " " + q)
+                .orElse(q);
+        return this;
+    }
+
+    @Override
+    public SearchRequest appendPhraseToQuery(String q) {
+        String phraseQ = surroundPhrase(q);
+        this.query = Optional.ofNullable(this.query)
+                .map(existingQuery -> existingQuery + " " + phraseQ)
+                .orElse(phraseQ);
         return this;
     }
 
@@ -182,6 +197,30 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
         return this;
     }
 
+
+    @Override
+    public SearchRequest sortBy(String field, SortOrder sortOrder) {
+        Objects.requireNonNull(field);
+        this.sort.add(field + ":" + sortOrder.toString());
+        return this;
+    }
+
+    @Override
+    public SearchRequest sortAscBy(String field) {
+        return sortBy(field, SortOrder.ASC);
+    }
+
+    @Override
+    public SearchRequest sortDescBy(String field) {
+        return sortBy(field, SortOrder.DESC);
+    }
+
+    @Override
+    public SearchRequest sortByDistanceFromPoint(double lat, double lon, SortOrder sortOrder) {
+        String geoPoint = "_geoPoint(" + lat + ", " + lon + ")";
+        return sortBy(geoPoint, sortOrder);
+    }
+
     @Override
     public AroundPoint aroundPoint(double lat, double lon) {
         this.aroundPoint = new GeoPoint(lat, lon);
@@ -224,6 +263,9 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
             body.put("showMatchesPosition", true);
         }
 
+        Optional.of(this.sort)
+                .filter(l -> !l.isEmpty())
+                .ifPresent(l -> body.put("sort", l));
         try {
             return objectMapper.writeValueAsString(body);
         } catch (JsonProcessingException e) {
@@ -242,4 +284,15 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
         double lat;
         double lon;
     }
+
+    private static String surroundPhrase(String phrase) {
+        String surroundedPhrase;
+        if (!phrase.startsWith(SEARCH_PHRASE_DELIM)) {
+            surroundedPhrase = SEARCH_PHRASE_DELIM + phrase + SEARCH_PHRASE_DELIM;
+        } else {
+            surroundedPhrase = phrase;
+        }
+        return surroundedPhrase;
+    }
+
 }

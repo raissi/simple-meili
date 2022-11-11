@@ -8,6 +8,5 @@ public interface FromIndexGet {
 
     GetDocuments get();
     GetDocument get(String documentId);
-    SearchRequest q(String q);
 
 }
