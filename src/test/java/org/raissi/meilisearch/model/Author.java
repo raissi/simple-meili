@@ -1,9 +1,16 @@
 package org.raissi.meilisearch.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Author {
     private String uid;
     private String name;
     private String country;
+
+    private String bio;
+
+    @JsonProperty("_formatted")
+    private Author formatted;
 
     public String getUid() {
         return uid;
@@ -52,5 +59,21 @@ public class Author {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public Author getFormatted() {
+        return formatted;
+    }
+
+    public void setFormatted(Author formatted) {
+        this.formatted = formatted;
     }
 }

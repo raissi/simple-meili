@@ -9,20 +9,27 @@ import java.util.*;
 import static java.util.Collections.singleton;
 import static java.util.Optional.ofNullable;
 
-public class DefaultSearchRequest extends BaseGet implements SearchRequest, SearchRequest.AroundPoint { //TODO add BasePaging
+public class DefaultSearchRequest extends BaseGet implements SearchRequest, SearchRequest.AroundPoint {
 
+    public static final String STAR_WILDCARD = "*";
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private String query;
     private int offset = 0;
     private int limit = 20;
     private final List<String> filters;
 
-    private Set<String> attributesToRetrieve = singleton("*");
+    private Set<String> attributesToRetrieve;
     private Set<String> attributesToCrop;
 
     private Integer cropLength;
 
     private String cropMarker = "…";
+
+    private Set<String> attributesToHighlight;
+
+    private String highlightPreTag = "<em>";
+
+    private String highlightPostTag = "</em>";
 
     private GeoPoint aroundPoint;
 
@@ -100,8 +107,14 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     public SearchRequest retrieveAttributes(Collection<String> attributesToRetrieve) {
         Collection<String> attrsOrElseStar = ofNullable(attributesToRetrieve)
                 .filter(c -> !c.isEmpty())
-                .orElseGet(() -> singleton("*"));
+                .orElseGet(() -> singleton(STAR_WILDCARD));
         this.attributesToRetrieve = new HashSet<>(attrsOrElseStar);
+        return this;
+    }
+
+    @Override
+    public SearchRequest cropAllRetrievedAttributes() {
+        this.attributesToCrop = Collections.singleton(STAR_WILDCARD);
         return this;
     }
 
@@ -127,6 +140,28 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     }
 
     @Override
+    public SearchRequest highlightAllRetrievedAttributes() {
+        this.attributesToHighlight = Collections.singleton(STAR_WILDCARD);
+        return this;
+    }
+
+    @Override
+    public SearchRequest highlightAttributes(Collection<String> attributesToHighlight) {
+        Collection<String> attrs = ofNullable(attributesToHighlight).orElseGet(Collections::emptyList);
+        this.attributesToHighlight = new HashSet<>(attrs);
+        return this;
+    }
+
+    @Override
+    public SearchRequest highlightTags(String preTag, String postTag) {
+        if(preTag != null && postTag != null && !preTag.isBlank() && !postTag.isBlank()) {
+            this.highlightPreTag = preTag;
+            this.highlightPostTag = postTag;
+        }
+        return this;
+    }
+
+    @Override
     public AroundPoint aroundPoint(double lat, double lon) {
         this.aroundPoint = new GeoPoint(lat, lon);
         return this;
@@ -143,14 +178,26 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
                 .filter(l -> !l.isEmpty())
                 .ifPresent(l -> body.put("filter", l));
 
-        body.put("attributesToRetrieve", attributesToRetrieve);
+        Optional.ofNullable(this.attributesToRetrieve)
+                .filter(l -> !l.isEmpty())
+                .ifPresent(l -> body.put("attributesToRetrieve", l));
+
         Optional.ofNullable(this.attributesToCrop)
                 .filter(l -> !l.isEmpty())
-                .ifPresent(l -> body.put("attributesToCrop", l));
+                .ifPresent(l -> {
+                    body.put("attributesToCrop", l);
+                    body.put("cropMarker", cropMarker);
+                });
         ofNullable(cropLength)
                 .ifPresent(length -> body.put("cropLength", length));
-        body.put("cropMarker", cropMarker);
 
+        Optional.ofNullable(this.attributesToHighlight)
+                .filter(l -> !l.isEmpty())
+                .ifPresent(l -> {
+                    body.put("attributesToHighlight", l);
+                    body.put("highlightPreTag", this.highlightPreTag);
+                    body.put("highlightPostTag", this.highlightPostTag);
+                });
         try {
             return objectMapper.writeValueAsString(body);
         } catch (JsonProcessingException e) {

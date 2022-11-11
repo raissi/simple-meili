@@ -4,8 +4,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.raissi.meilisearch.client.MeiliClient;
@@ -18,7 +18,9 @@ import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.model.Author;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -77,10 +79,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find the only Jane").isEqualTo(1);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -94,10 +96,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(2, searchResults.getEstimatedTotalHits(), "Must find both darwin and dickens");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find darwin and dickens and baudelaire").isEqualTo(3);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -111,10 +113,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(3, searchResults.getEstimatedTotalHits(), "Must find all charles");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find all charles").isEqualTo(3);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -128,10 +130,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Dickens");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find only Dickens").isEqualTo(1);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -145,10 +147,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Dickens");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find only Dickens").isEqualTo(1);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -162,10 +164,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Dickens");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find only Dickens").isEqualTo(1);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -179,10 +181,10 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(3, searchResults.getEstimatedTotalHits(), "Must find all English authors");
-        Assertions.assertEquals(0, searchResults.getOffset());
-        Assertions.assertEquals(20, searchResults.getLimit());
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find all English authors").isEqualTo(3);
+        Assertions.assertThat(searchResults.getOffset()).isEqualTo(0);
+        Assertions.assertThat(searchResults.getLimit()).isEqualTo(20);
     }
 
     @Test
@@ -197,8 +199,8 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find only Jane Austen").isEqualTo(1);
     }
 
     @Test
@@ -212,8 +214,8 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find only Jane Austen").isEqualTo(1);
     }
 
     @Test
@@ -228,8 +230,8 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(1, searchResults.getEstimatedTotalHits(), "Must find only Jane Austen");
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find only Jane Austen").isEqualTo(1);
     }
 
     @Test
@@ -244,8 +246,8 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .orElse(() -> null);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
-        Assertions.assertEquals(0, searchResults.getEstimatedTotalHits(), "Must find none");
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(searchResults.getEstimatedTotalHits()).as("Must find none").isEqualTo(0);
     }
 
     @Test
@@ -260,13 +262,66 @@ public class SearchDocumentsTest {
                 .ifFailure(s -> isSuccess.set(false))
                 .ifFailure(Throwable::printStackTrace);
 
-        Assertions.assertTrue(isSuccess.get(), "Search should execute");
+        Assertions.assertThat(isSuccess).isTrue();
+    }
+
+    @Test
+    void shouldCropAttributes() {
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .q("british")
+                .cropAttributes(Collections.singleton("bio"))
+                .cropLength(6)
+                .markCropBoundariesWith("...");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        Optional<Author> formattedFirstAuthor = client.search(search, Author.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .ifFailure(Throwable::printStackTrace)
+                .andThenTry(SearchResponse::getHits)
+                .orElse(Collections::emptyList)
+                .stream()
+                .map(Author::getFormatted)
+                .findFirst();
+
+        Assertions.assertThat(isSuccess).isTrue();
+        Assertions.assertThat(formattedFirstAuthor).as("Must contain formatted").isPresent();
+        Assertions.assertThat(formattedFirstAuthor)
+                .hasValueSatisfying(a -> { Assertions.assertThat(a.getBio()).startsWith("...").endsWith("..."); });
+    }
+
+    @Test
+    void shouldHighlightAttributes() {
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .q("British")
+                //.highlightAttributes(Collections.singleton("bio"))
+                .highlightAllRetrievedAttributes()
+                .highlightTags("startWithTag-", "-endWithTag");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        Optional<Author> formattedFirstAuthor = client.search(search, Author.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .ifFailure(Throwable::printStackTrace)
+                .andThenTry(SearchResponse::getHits)
+                .orElse(Collections::emptyList)
+                .stream()
+                .map(Author::getFormatted)
+                .findFirst();
+
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(formattedFirstAuthor)
+                .hasValueSatisfying(a -> {
+                    Assertions.assertThat(a.getBio()).containsIgnoringCase("startWithTag-British-endWithTag"); });
     }
     public static List<Author> authors() {
         Author austen = new Author();
         austen.setUid("1");
         austen.setName("Jane Austen");
         austen.setCountry("England");
+        austen.setBio("Jane Austen was an English novelist known primarily " +
+                "for her six major novels, which interpret, critique, " +
+                "and comment upon the British landed gentry at the end " +
+                "of the 18th century. Austen's plots often explore the dependence " +
+                "of women on marriage in the pursuit of favourable social standing and economic security.");
 
         Author dickens = new Author();
         dickens.setUid("2");

@@ -19,11 +19,19 @@ public interface SearchRequest extends PagingRequest<SearchRequest>, HasBody {
 
     SearchRequest retrieveAttributes(Collection<String> attributesToRetrieve);
 
+    SearchRequest cropAllRetrievedAttributes();
+
     SearchRequest cropAttributes(Collection<String> attributesToCrop);
 
     SearchRequest cropLength(int cropLength);
 
     SearchRequest markCropBoundariesWith(String cropMarker);
+
+    SearchRequest highlightAllRetrievedAttributes();
+
+    SearchRequest highlightAttributes(Collection<String> attributesToHighlight);
+
+    SearchRequest highlightTags(String preTag, String postTag);
 
     AroundPoint aroundPoint(double lat, double lon);
 
