@@ -13,26 +13,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.raissi.meilisearch.client.response.model.MeiliError.DOCUMENT_NOT_FOUND_ERROR;
+
 public class GetDocumentIgnoreNotFoundResponseHandler implements ResponseHandler {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(GetDocumentsResponseHandler.class);
     private final GetDocumentIgnoreNotFound get;
 
     public GetDocumentIgnoreNotFoundResponseHandler(GetDocumentIgnoreNotFound get) {
+        this(get, new ObjectMapper());
+    }
+
+    public GetDocumentIgnoreNotFoundResponseHandler(GetDocumentIgnoreNotFound get, ObjectMapper objectMapper) {
         this.get = get;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public Optional<MeiliSearchException> buildException(int code, String calledResource, Map<String, List<String>> responseHeaders, String respBody) {
-        Try<MeiliError> parsedError = Try.of(() -> objectMapper.readValue(respBody, MeiliError.class));
-
         if(code == 404) {
+            Try<MeiliError> parsedError = Try.of(() -> objectMapper.readValue(respBody, MeiliError.class));
             logger.error("404 - Could not find document(s) at: {}. Server responded with: {}", get.path(), respBody);
             //ignore error only if user requested to and error code is document_not_found
             Boolean isDocumentNotFoundError = parsedError.ignoreErrors()
-                    .map(error -> "document_not_found".equals(error.getCode()))
+                    .map(error -> DOCUMENT_NOT_FOUND_ERROR.equals(error.getCode()))
                     .orElse(false);
             if(isDocumentNotFoundError) {
                 return Optional.empty();

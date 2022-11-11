@@ -2,6 +2,7 @@ package org.raissi.meilisearch.client.querybuilder.search;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.raissi.meilisearch.client.querybuilder.MatchingStrategy;
 import org.raissi.meilisearch.client.querybuilder.SortOrder;
@@ -53,7 +54,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
     @Override
     public SearchRequest fetchOnly(List<String> fields) {
-        return null;
+        return retrieveAttributes(fields);
     }
 
     @Override
@@ -147,7 +148,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     public SearchRequest retrieveAttributes(Collection<String> attributesToRetrieve) {
         Collection<String> attrsOrElseStar = ofNullable(attributesToRetrieve)
                 .filter(c -> !c.isEmpty())
-                .orElseGet(() -> singleton(STAR_WILDCARD));
+                .orElseGet(Collections::emptyList);
         this.attributesToRetrieve = new HashSet<>(attrsOrElseStar);
         return this;
     }
@@ -292,6 +293,14 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
         Optional.of(this.sort)
                 .filter(l -> !l.isEmpty())
                 .ifPresent(l -> body.put("sort", l));
+
+        Optional.of(offset)
+                .filter(off -> off > 0)
+                .ifPresent(off -> body.put("offset", offset()));
+
+        Optional.of(limit)
+                .filter(lim -> lim != 20)
+                .ifPresent(lim -> body.put("limit", limit()));
 
         ofNullable(matchingStrategy)
                 .ifPresent(strategy -> body.put("matchingStrategy", strategy.toString()));

@@ -1,11 +1,7 @@
 package org.raissi.meilisearch.integration;
 
-import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.raissi.meilisearch.client.MeiliClient;
-import org.raissi.meilisearch.client.MeiliClientOkHttp;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocument;
 import org.raissi.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
@@ -18,18 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GetDocumentsTest {
-
-    static MeiliClient client;
-
-    @BeforeAll
-    public static void setUp() {
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        client = MeiliClientOkHttp.usingOkHttp(okHttpClient)
-                .forHost("http://localhost:7700")
-                .withSearchKey("masterKey");
-    }
+public class GetDocumentsITest extends BaseIntTest{
 
     @Test
     public void shouldFailForGetListOfMoviesWhenIndexNonValid() {
@@ -138,9 +123,14 @@ public class GetDocumentsTest {
     public void getListOfMoviesWithSpecificFields() {
         GetDocuments getMovies = MeiliQueryBuilder.fromIndex("movies").get()
                             .fetch(5).fetchOnly(Arrays.asList("id", "title"));
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+
         List<Movie> movies = client.get(getMovies, Movie.class)
                 .andThenTry(GetResults::getResults)
+                .ifSuccess(s -> isSuccess.set(true))
                 .orElse(Collections::emptyList);
+
+        Assertions.assertTrue(isSuccess.get(), "Must succeed");
 
         Assertions.assertAll("Should not return overview field",
             movies.stream().map(movie -> () -> Assertions.assertNull(movie.getOverview()))

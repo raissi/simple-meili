@@ -1,9 +1,6 @@
 package org.raissi.meilisearch.integration;
 
-import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.*;
-import org.raissi.meilisearch.client.MeiliClient;
-import org.raissi.meilisearch.client.MeiliClientOkHttp;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
 import org.raissi.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
@@ -19,20 +16,12 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static org.raissi.meilisearch.integration.WriteDocumentsTest.authors;
+import static org.raissi.meilisearch.integration.WriteDocumentsITest.authors;
 
-public class DeleteDocumentsTest {
 
-    static MeiliClient client;
+public class DeleteDocumentsITest extends BaseIntTest {
 
-    @BeforeAll
-    public static void setUp() {
-        OkHttpClient okHttpClient = new OkHttpClient();
 
-        client = MeiliClientOkHttp.usingOkHttp(okHttpClient)
-                .forHost("http://localhost:7700")
-                .withSearchKey("masterKey");
-    }
 
     @BeforeEach
     public void insertAuthors(TestInfo info) {

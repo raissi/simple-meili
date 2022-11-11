@@ -7,6 +7,7 @@ import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.raissi.meilisearch.client.querybuilder.SortOrder.ASC;
 
@@ -119,7 +120,39 @@ public class SearchRequestBuilderTest {
     }
 
     @Test
-    void shouldUseDefaultCropParams() throws Exception {
+    void shouldNotDefineRetrievedAttributesWhenEmptyCollection() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .retrieveAttributes(Collections.emptyList())
+                .json();
+
+        JSONAssert.assertEquals("{}", json, false);
+    }
+
+    @Test
+    void shouldDefineRetrievedAttributes_UsingFetchOnly() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .filter("")
+                .fetchOnly(Arrays.asList("attr1", "attr2"))
+                .json();
+
+        JSONAssert.assertEquals("{\"attributesToRetrieve\": [\"attr1\", \"attr2\"]}", json, false);
+    }
+
+    @Test
+    void shouldDefinePaging() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .startingAt(3)
+                .fetch(25)
+                .json();
+
+        JSONAssert.assertEquals("{\"offset\":3,\"limit\":25}", json, false);
+    }
+
+    @Test
+    void shouldNotUseDefaultCropParams() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("")
                 .filter("")
@@ -128,6 +161,16 @@ public class SearchRequestBuilderTest {
         Assertions.assertFalse(json.contains("attributesToCrop"));
         Assertions.assertFalse(json.contains("cropLength"));
         JSONAssert.assertNotEquals("{\"cropMarker\": \"…\"}", json, false);
+    }
+
+    @Test
+    void shouldCropAllParams() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .cropAllRetrievedAttributes()
+                .json();
+
+        JSONAssert.assertEquals("{\"cropMarker\":\"…\",\"attributesToCrop\":[\"*\"]}", json, false);
     }
 
     @Test
@@ -143,6 +186,18 @@ public class SearchRequestBuilderTest {
         JSONAssert.assertEquals("{\"attributesToCrop\": [\"attr1\", \"attr2\"]}", json, false);
         JSONAssert.assertEquals("{\"cropLength\": 3}", json, false);
         JSONAssert.assertEquals("{\"cropMarker\": \"#\"}", json, false);
+    }
+
+    @Test
+    public void shouldHighlightAllAttributes() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .highlightAllRetrievedAttributes()
+                .json();
+
+        JSONAssert.assertEquals("{\"attributesToHighlight\": [\"*\"]}", json, false);
+        JSONAssert.assertEquals("{\"highlightPreTag\": \"<em>\"}", json, false);
+        JSONAssert.assertEquals("{\"highlightPostTag\": \"</em>\"}", json, false);
     }
 
     @Test

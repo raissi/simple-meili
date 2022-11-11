@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MeiliError {
 
+    public static final String DOCUMENT_NOT_FOUND_ERROR = "document_not_found";
+
     private String message;
     private String code;
 

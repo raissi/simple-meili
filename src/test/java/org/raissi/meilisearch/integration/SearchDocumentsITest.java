@@ -8,14 +8,11 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.raissi.meilisearch.client.MeiliClient;
-import org.raissi.meilisearch.client.MeiliClientOkHttp;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.SearchResponse;
-import org.raissi.meilisearch.control.Try;
 import org.raissi.meilisearch.model.Author;
 import org.raissi.meilisearch.model.Author.AuthorFormatted;
 import org.raissi.meilisearch.model.Author.AuthorWithPositions;
@@ -28,18 +25,13 @@ import java.util.function.Function;
 import static org.raissi.meilisearch.client.MeiliClientOkHttp.JSON;
 
 
-public class SearchDocumentsTest {
+public class SearchDocumentsITest extends BaseIntTest {
 
-    static MeiliClient client;
     static String indexName = "authorsForSearch";
 
     @BeforeAll
-    public static void setUp() throws Exception {
+    public static void setUpSearch() throws Exception {
         OkHttpClient okHttpClient = new OkHttpClient();
-
-        client = MeiliClientOkHttp.usingOkHttp(okHttpClient)
-                .forHost("http://localhost:7700")
-                .withSearchKey("masterKey");
 
         List<Author> authors = authors();
         UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex(indexName)
@@ -49,8 +41,9 @@ public class SearchDocumentsTest {
                 .andThen(CanBlockOnTask::waitForCompletion)
                 .orElseThrow(Function.identity());
 
+
         Request request = new Request.Builder()
-                .url("http://localhost:7700/indexes/"+indexName+"/settings/filterable-attributes")
+                .url(hostUrl+"/indexes/"+indexName+"/settings/filterable-attributes")
                 .addHeader("Authorization", "Bearer masterKey")
                 .put(RequestBody.create("[\"country\", \"uid\"]", JSON))
                 .build();
