@@ -55,8 +55,18 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     }
 
     @Override
-    public SearchRequest filters(Collection<String> filters) {
-        return new DefaultSearchRequest(index).filters(filters);
+    public SearchRequest appendFilters(Collection<String> filters) {
+        return new DefaultSearchRequest(index).appendFilters(filters);
+    }
+
+    @Override
+    public SearchRequest facet(String facet) {
+        return new DefaultSearchRequest(index).facet(facet);
+    }
+
+    @Override
+    public SearchRequest facets(Collection<String> facets) {
+        return new DefaultSearchRequest(index).facets(facets);
     }
 
     @Override

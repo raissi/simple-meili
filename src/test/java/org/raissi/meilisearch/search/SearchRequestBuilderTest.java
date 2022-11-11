@@ -69,6 +69,34 @@ public class SearchRequestBuilderTest {
         JSONAssert.assertEquals("{\"q\": \"test\", \"filter\": [\"field = value\"]}", json, false);
     }
     @Test
+    void shouldAddFilters_collection() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("test")
+                .appendFilters(Arrays.asList("field = value", "field2 = value2"))
+                .json();
+
+        JSONAssert.assertEquals("{\"q\": \"test\", \"filter\": [\"field = value\", \"field2 = value2\"]}", json, false);
+    }
+
+    @Test
+    void shouldDefineFacets() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .facets(Arrays.asList("field", "field2"))
+                .json();
+
+        JSONAssert.assertEquals("{\"facets\": [\"field\", \"field2\"]}", json, false);
+    }
+
+    @Test
+    void shouldDefineFacets_insideRequest() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("test")
+                .facet("field")
+                .json();
+
+        JSONAssert.assertEquals("{\"q\": \"test\", \"facets\": [\"field\"]}", json, false);
+    }
+    @Test
     void shouldClearFilters() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("test")

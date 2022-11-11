@@ -15,9 +15,6 @@ public interface SearchRequest extends FromIndexSearch<SearchRequest>, PagingReq
 
     SearchRequest clearFilters();
 
-    SearchRequest facet(String facet);
-    SearchRequest facets(Collection<String> facets);
-
     SearchRequest cropAllRetrievedAttributes();
 
     SearchRequest highlightAllRetrievedAttributes();

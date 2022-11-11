@@ -12,11 +12,14 @@ public interface FromIndexSearch<SRequest extends FromIndexSearch<SRequest>> {
      * Automatically surround the given phrase with {@code \" \"}.
      * If the given phrase does already start with a \" it will be passed as is
      * @param phrase the search phrase
-     * @return an instance of {@link SearchRequest}
+     * @return an instance of {@link SRequest}
      */
     SRequest phrase(String phrase);
     SRequest filter(String filter);
-    SRequest filters(Collection<String> filters);
+    SRequest appendFilters(Collection<String> filters);
+
+    SRequest facet(String facet);
+    SRequest facets(Collection<String> facets);
 
     SRequest retrieveAttributes(Collection<String> attributesToRetrieve);
     SRequest cropAttributes(Collection<String> attributesToCrop);

@@ -21,6 +21,8 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     private int limit = 20;
     private final List<String> filters;
 
+    private final List<String> facets;
+
     private Set<String> attributesToRetrieve;
     private Set<String> attributesToCrop;
 
@@ -36,7 +38,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
     private boolean showMatchesPosition;
 
-    private List<String> sort;
+    private final List<String> sort;
 
     private MatchingStrategy matchingStrategy;
 
@@ -45,6 +47,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     public DefaultSearchRequest(String index) {
         super("/indexes/" + index + "/search");
         filters = new ArrayList<>();
+        facets = new ArrayList<>();
         sort = new ArrayList<>();
     }
 
@@ -97,7 +100,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     }
 
     @Override
-    public SearchRequest filters(Collection<String> filters) {
+    public SearchRequest appendFilters(Collection<String> filters) {
         Objects.requireNonNull(filters);
         this.filters.addAll(filters);
         return this;
@@ -128,12 +131,16 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
     @Override
     public SearchRequest facet(String facet) {
-        return null;
+        Objects.requireNonNull(facet);
+        facets.add(facet);
+        return this;
     }
 
     @Override
     public SearchRequest facets(Collection<String> facets) {
-        return null;
+        Objects.requireNonNull(facets);
+        this.facets.addAll(facets);
+        return this;
     }
 
     @Override
@@ -252,6 +259,10 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
         Optional.of(this.filters)
                 .filter(l -> !l.isEmpty())
                 .ifPresent(l -> body.put("filter", l));
+
+        Optional.of(this.facets)
+                .filter(l -> !l.isEmpty())
+                .ifPresent(l -> body.put("facets", l));
 
         Optional.ofNullable(this.attributesToRetrieve)
                 .filter(l -> !l.isEmpty())

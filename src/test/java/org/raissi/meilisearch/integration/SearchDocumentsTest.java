@@ -15,6 +15,7 @@ import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.SearchResponse;
+import org.raissi.meilisearch.control.Try;
 import org.raissi.meilisearch.model.Author;
 import org.raissi.meilisearch.model.Author.AuthorFormatted;
 import org.raissi.meilisearch.model.Author.AuthorWithPositions;
@@ -337,7 +338,24 @@ public class SearchDocumentsTest {
     }
 
 
-
+    @Test
+    void shouldSearchWithFacets() {
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .q("charles")
+                .facet("country");
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        Map<String, Map<String, Integer>> distribution = client.search(search, AuthorWithPositions.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .ifFailure(Throwable::printStackTrace)
+                .andThenTry(SearchResponse::getFacetDistribution)
+                .orElse(Collections::emptyMap);
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Map<String, Integer> countryDist = distribution.get("country");
+        Assertions.assertThat(countryDist).as("Both France and England have authors named Charles").hasSize(2);
+        Integer englandCount = countryDist.get("England");
+        Assertions.assertThat(englandCount).as("England has two authors named Charles").isEqualTo(2);
+    }
 
 
     public static List<Author> authors() {
