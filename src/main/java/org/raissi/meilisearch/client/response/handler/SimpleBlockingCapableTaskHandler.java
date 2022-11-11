@@ -76,8 +76,7 @@ public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
 
         return exceptionGettingStatus.get()
                 .map(Try::<MeiliTask>failure)
-                .orElse(currentTask)
-                .andThen(MeiliTask::extractError);
+                .orElse(currentTask);
     }
     private boolean isComplete(String status) {
         return TASK_SUCCEEDED.equals(status) || TASK_FAILED.equals(status);

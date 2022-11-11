@@ -58,7 +58,7 @@ public class SearchRequestBuilderTest {
 
         Assertions.assertFalse(json.contains("attributesToCrop"));
         Assertions.assertFalse(json.contains("cropLength"));
-        JSONAssert.assertEquals("{\"cropMarker\": \"…\"}", json, false);
+        JSONAssert.assertNotEquals("{\"cropMarker\": \"…\"}", json, false);
     }
 
     @Test
@@ -74,5 +74,15 @@ public class SearchRequestBuilderTest {
         JSONAssert.assertEquals("{\"attributesToCrop\": [\"attr1\", \"attr2\"]}", json, false);
         JSONAssert.assertEquals("{\"cropLength\": 3}", json, false);
         JSONAssert.assertEquals("{\"cropMarker\": \"#\"}", json, false);
+    }
+
+    @Test
+    void shouldSetMatchesPosition() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("")
+                .showMatchesPosition(true)
+                .json();
+
+        JSONAssert.assertEquals("{\"showMatchesPosition\":true}", json, false);
     }
 }

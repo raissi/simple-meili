@@ -37,6 +37,8 @@ public interface Try<T> {
 
     Optional<T> ignoreErrors();
 
+    Optional<Exception> exception();
+
     Try<T> ifFailure(Consumer<Exception> causeConsumer);
 
     Try<T> ifSuccess(Consumer<T> valueConsumer);
@@ -121,6 +123,11 @@ public interface Try<T> {
         }
 
         @Override
+        public Optional<Exception> exception() {
+            return Optional.empty();
+        }
+
+        @Override
         public Try<V> ifFailure(Consumer<Exception> causeConsumer) {
             return this;
         }
@@ -182,6 +189,11 @@ public interface Try<T> {
         @Override
         public Optional<V> ignoreErrors() {
             return Optional.empty();
+        }
+
+        @Override
+        public Optional<Exception> exception() {
+            return Optional.of(cause);
         }
 
         @Override

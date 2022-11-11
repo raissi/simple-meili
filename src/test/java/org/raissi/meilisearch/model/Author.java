@@ -1,6 +1,10 @@
 package org.raissi.meilisearch.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.List;
+import java.util.Map;
 
 public class Author {
     private String uid;
@@ -9,8 +13,7 @@ public class Author {
 
     private String bio;
 
-    @JsonProperty("_formatted")
-    private Author formatted;
+
 
     public String getUid() {
         return uid;
@@ -41,6 +44,26 @@ public class Author {
             return name;
         }
     }
+
+    public static class AuthorFormatted extends Author {
+        @JsonProperty("_formatted")
+        private Author formatted;
+
+        public Author getFormatted() {
+            return formatted;
+        }
+
+        public void setFormatted(Author formatted) {
+            this.formatted = formatted;
+        }
+    }
+
+
+    @Data
+    public static class AuthorWithPositions extends AuthorFormatted {
+        @JsonProperty("_matchesPosition")
+        private Map<String, List<MatchPosition>> matchesPosition;
+    }
     public void setUid(String uid) {
         this.uid = uid;
     }
@@ -69,11 +92,5 @@ public class Author {
         this.bio = bio;
     }
 
-    public Author getFormatted() {
-        return formatted;
-    }
 
-    public void setFormatted(Author formatted) {
-        this.formatted = formatted;
-    }
 }

@@ -1,10 +1,10 @@
 package org.raissi.meilisearch.control;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.*;
 
 public class TryTest {
 
@@ -18,8 +18,17 @@ public class TryTest {
                 .ignoreErrors()
                 .orElse("");
 
-        Assertions.assertTrue(successCalled.get());
-        Assertions.assertEquals("OK OK", result);
+        assertThat(successCalled).isTrue();
+        assertThat(result).isEqualTo("OK OK");
+    }
+
+    @Test
+    public void shouldReturnException() {
+        String exceptionMessage = Try.of(this::alwaysFailure)
+                .exception()
+                .map(Throwable::getMessage)
+                .orElse(null);
+        assertThat(exceptionMessage).isEqualTo("Failure");
     }
 
     private String alwaysSuccess() {

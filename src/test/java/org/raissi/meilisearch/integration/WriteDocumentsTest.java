@@ -14,6 +14,7 @@ import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
 import org.raissi.meilisearch.client.response.model.GetResults;
+import org.raissi.meilisearch.control.Try;
 import org.raissi.meilisearch.model.Author;
 
 import java.util.Collections;

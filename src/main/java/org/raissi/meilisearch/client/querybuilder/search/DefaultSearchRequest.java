@@ -8,6 +8,7 @@ import java.util.*;
 
 import static java.util.Collections.singleton;
 import static java.util.Optional.ofNullable;
+import static org.raissi.meilisearch.client.querybuilder.DefaultQueryBuilder.SEARCH_PHRASE_DELIM;
 
 public class DefaultSearchRequest extends BaseGet implements SearchRequest, SearchRequest.AroundPoint {
 
@@ -30,6 +31,8 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     private String highlightPreTag = "<em>";
 
     private String highlightPostTag = "</em>";
+
+    private boolean showMatchesPosition;
 
     private GeoPoint aroundPoint;
 
@@ -68,6 +71,18 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     @Override
     public SearchRequest q(String q) {
         this.query = q;
+        return this;
+    }
+
+    @Override
+    public SearchRequest phrase(String phrase) {
+        String surroundedPhrase;
+        if (!phrase.startsWith(SEARCH_PHRASE_DELIM)) {
+            surroundedPhrase = SEARCH_PHRASE_DELIM +phrase+ SEARCH_PHRASE_DELIM;
+        } else {
+            surroundedPhrase = phrase;
+        }
+        this.query = surroundedPhrase;
         return this;
     }
 
@@ -162,6 +177,12 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     }
 
     @Override
+    public SearchRequest showMatchesPosition(boolean showMatchesPosition) {
+        this.showMatchesPosition = showMatchesPosition;
+        return this;
+    }
+
+    @Override
     public AroundPoint aroundPoint(double lat, double lon) {
         this.aroundPoint = new GeoPoint(lat, lon);
         return this;
@@ -198,6 +219,11 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
                     body.put("highlightPreTag", this.highlightPreTag);
                     body.put("highlightPostTag", this.highlightPostTag);
                 });
+
+        if(showMatchesPosition) {
+            body.put("showMatchesPosition", true);
+        }
+
         try {
             return objectMapper.writeValueAsString(body);
         } catch (JsonProcessingException e) {

@@ -16,11 +16,11 @@ import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
 import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.model.Author;
+import org.raissi.meilisearch.model.Author.AuthorFormatted;
+import org.raissi.meilisearch.model.Author.AuthorWithPositions;
+import org.raissi.meilisearch.model.MatchPosition;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -273,14 +273,14 @@ public class SearchDocumentsTest {
                 .cropLength(6)
                 .markCropBoundariesWith("...");
         AtomicBoolean isSuccess = new AtomicBoolean(false);
-        Optional<Author> formattedFirstAuthor = client.search(search, Author.class)
+        Optional<Author> formattedFirstAuthor = client.search(search, AuthorFormatted.class)
                 .ifSuccess(s -> isSuccess.set(true))
                 .ifFailure(s -> isSuccess.set(false))
                 .ifFailure(Throwable::printStackTrace)
                 .andThenTry(SearchResponse::getHits)
                 .orElse(Collections::emptyList)
                 .stream()
-                .map(Author::getFormatted)
+                .map(AuthorFormatted::getFormatted)
                 .findFirst();
 
         Assertions.assertThat(isSuccess).isTrue();
@@ -293,18 +293,17 @@ public class SearchDocumentsTest {
     void shouldHighlightAttributes() {
         SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
                 .q("British")
-                //.highlightAttributes(Collections.singleton("bio"))
-                .highlightAllRetrievedAttributes()
+                .highlightAttributes(Collections.singleton("bio"))
                 .highlightTags("startWithTag-", "-endWithTag");
         AtomicBoolean isSuccess = new AtomicBoolean(false);
-        Optional<Author> formattedFirstAuthor = client.search(search, Author.class)
+        Optional<Author> formattedFirstAuthor = client.search(search, AuthorFormatted.class)
                 .ifSuccess(s -> isSuccess.set(true))
                 .ifFailure(s -> isSuccess.set(false))
                 .ifFailure(Throwable::printStackTrace)
                 .andThenTry(SearchResponse::getHits)
                 .orElse(Collections::emptyList)
                 .stream()
-                .map(Author::getFormatted)
+                .map(AuthorFormatted::getFormatted)
                 .findFirst();
 
         Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
@@ -312,6 +311,35 @@ public class SearchDocumentsTest {
                 .hasValueSatisfying(a -> {
                     Assertions.assertThat(a.getBio()).containsIgnoringCase("startWithTag-British-endWithTag"); });
     }
+
+    @Test
+    void shouldGetMatchesPosition() {
+        SearchRequest search = MeiliQueryBuilder.fromIndex(indexName)
+                .q("novel")
+                .filter("uid = 1")
+                .showMatchesPosition(true);
+        AtomicBoolean isSuccess = new AtomicBoolean(false);
+        Optional<Map<String, List<MatchPosition>>> matchesPosition = client.search(search, AuthorWithPositions.class)
+                .ifSuccess(s -> isSuccess.set(true))
+                .ifFailure(s -> isSuccess.set(false))
+                .ifFailure(Throwable::printStackTrace)
+                .andThenTry(SearchResponse::getHits)
+                .orElse(Collections::emptyList)
+                .stream()
+                .map(AuthorWithPositions::getMatchesPosition)
+                .findFirst();
+
+        Assertions.assertThat(isSuccess).as("Search should execute").isTrue();
+        Assertions.assertThat(matchesPosition)
+                .hasValueSatisfying(matchPositions -> {
+                    Assertions.assertThat(matchPositions.get("bio")).as("novel appears twice in bio of Austen").hasSize(2);
+                });
+    }
+
+
+
+
+
     public static List<Author> authors() {
         Author austen = new Author();
         austen.setUid("1");
