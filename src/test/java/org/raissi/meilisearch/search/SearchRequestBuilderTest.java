@@ -2,6 +2,7 @@ package org.raissi.meilisearch.search;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.raissi.meilisearch.client.querybuilder.MatchingStrategy;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -164,5 +165,25 @@ public class SearchRequestBuilderTest {
                 .json();
 
         JSONAssert.assertEquals("{\"sort\":[\"uid:asc\", \"_geoPoint(48.8561446, 2.2978204):asc\"]}", json, false);
+    }
+
+    @Test
+    public void shouldDefineMatchingStrategy() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("search")
+                .matchingStrategy(MatchingStrategy.LAST)
+                .json();
+
+        JSONAssert.assertEquals("{\"matchingStrategy\": \"last\"}", json, false);
+    }
+
+    @Test
+    public void shouldDefineMatchingStrategy_ALL() throws Exception {
+        var json = MeiliQueryBuilder.fromIndex("index")
+                .q("search")
+                .matchDocumentsContainingAllQueryTerms()
+                .json();
+
+        JSONAssert.assertEquals("{\"matchingStrategy\": \"all\"}", json, false);
     }
 }

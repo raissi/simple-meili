@@ -3,6 +3,7 @@ package org.raissi.meilisearch.client.querybuilder.search;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Value;
+import org.raissi.meilisearch.client.querybuilder.MatchingStrategy;
 import org.raissi.meilisearch.client.querybuilder.SortOrder;
 
 import java.util.*;
@@ -36,6 +37,8 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     private boolean showMatchesPosition;
 
     private List<String> sort;
+
+    private MatchingStrategy matchingStrategy;
 
     private GeoPoint aroundPoint;
 
@@ -221,6 +224,18 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
         return sortBy(geoPoint, sortOrder);
     }
 
+
+    @Override
+    public SearchRequest matchDocumentsContainingAllQueryTerms() {
+        return matchingStrategy(MatchingStrategy.ALL);
+    }
+
+    @Override
+    public SearchRequest matchingStrategy(MatchingStrategy matchingStrategy) {
+        this.matchingStrategy = matchingStrategy;
+        return this;
+    }
+
     @Override
     public AroundPoint aroundPoint(double lat, double lon) {
         this.aroundPoint = new GeoPoint(lat, lon);
@@ -266,6 +281,9 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
         Optional.of(this.sort)
                 .filter(l -> !l.isEmpty())
                 .ifPresent(l -> body.put("sort", l));
+
+        ofNullable(matchingStrategy)
+                .ifPresent(strategy -> body.put("matchingStrategy", strategy.toString()));
         try {
             return objectMapper.writeValueAsString(body);
         } catch (JsonProcessingException e) {

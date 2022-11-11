@@ -2,6 +2,7 @@ package org.raissi.meilisearch.client.querybuilder.search;
 
 import org.raissi.meilisearch.client.querybuilder.FromIndexSearch;
 import org.raissi.meilisearch.client.querybuilder.HasBody;
+import org.raissi.meilisearch.client.querybuilder.MatchingStrategy;
 
 import java.util.Collection;
 
@@ -26,6 +27,10 @@ public interface SearchRequest extends FromIndexSearch<SearchRequest>, PagingReq
     SearchRequest highlightTags(String preTag, String postTag);
 
     SearchRequest showMatchesPosition(boolean showMatchesPosition);
+
+    SearchRequest matchDocumentsContainingAllQueryTerms();
+
+    SearchRequest matchingStrategy(MatchingStrategy matchingStrategy);
 
     interface AroundPoint {
         SearchRequest withinDistanceInMeters(int distanceInMeters);
