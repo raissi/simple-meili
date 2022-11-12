@@ -1,22 +1,17 @@
 package org.raissi.meilisearch.client.querybuilder.search;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.raissi.meilisearch.client.querybuilder.MatchingStrategy;
 import org.raissi.meilisearch.client.querybuilder.SortOrder;
 
 import java.util.*;
 
-import static java.util.Collections.singleton;
 import static java.util.Optional.ofNullable;
 import static org.raissi.meilisearch.client.querybuilder.DefaultQueryBuilder.SEARCH_PHRASE_DELIM;
 
 public class DefaultSearchRequest extends BaseGet implements SearchRequest, SearchRequest.AroundPoint {
 
     public static final String STAR_WILDCARD = "*";
-    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private String query;
     private int offset = 0;
     private int limit = 20;
@@ -251,7 +246,7 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
     }
 
     @Override
-    public String json() {
+    public String json(JsonWriter jsonWriter) {
         Map<String, Object> body = new HashMap<>();
         ofNullable(query)
                 .filter(s -> !s.isBlank())
@@ -304,11 +299,8 @@ public class DefaultSearchRequest extends BaseGet implements SearchRequest, Sear
 
         ofNullable(matchingStrategy)
                 .ifPresent(strategy -> body.put("matchingStrategy", strategy.toString()));
-        try {
-            return objectMapper.writeValueAsString(body);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+
+        return jsonWriter.json(body);
     }
 
     @Override

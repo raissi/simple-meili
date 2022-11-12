@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.raissi.meilisearch.client.querybuilder.MatchingStrategy;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
+import org.raissi.meilisearch.client.querybuilder.search.JacksonJsonReaderWriter;
+import org.raissi.meilisearch.client.querybuilder.search.JsonWriter;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Arrays;
@@ -13,12 +15,13 @@ import static org.raissi.meilisearch.client.querybuilder.SortOrder.ASC;
 
 public class SearchRequestBuilderTest {
 
+    JsonWriter jsonWriter = new JacksonJsonReaderWriter();
     @Test
     void shouldGenerateGeoRadius() {
         String queryJson = MeiliQueryBuilder.fromIndex("index")
                 .aroundPoint(45.472735, 9.184019)
                 .withinDistanceInMeters(2000)
-                .json();
+                .json(jsonWriter);
         Assertions.assertTrue(queryJson.contains("_geoRadius(45.472735, 9.184019, 2000)"));
     }
 
@@ -26,7 +29,7 @@ public class SearchRequestBuilderTest {
     void shouldAddPhrase() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .phrase("some query")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"\\\"some query\\\"\"}", json, false);
     }
@@ -35,7 +38,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("")
                 .phrase("some query")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"\\\"some query\\\"\"}", json, false);
     }
@@ -45,7 +48,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("hello")
                 .appendToQuery("world")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"hello world\"}", json, false);
     }
@@ -55,7 +58,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("hello")
                 .appendPhraseToQuery("you there")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"hello \\\"you there\\\"\"}", json, false);
     }
@@ -65,7 +68,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("test")
                 .filter("field = value")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"test\", \"filter\": [\"field = value\"]}", json, false);
     }
@@ -74,7 +77,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("test")
                 .appendFilters(Arrays.asList("field = value", "field2 = value2"))
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"test\", \"filter\": [\"field = value\", \"field2 = value2\"]}", json, false);
     }
@@ -83,7 +86,7 @@ public class SearchRequestBuilderTest {
     void shouldDefineFacets() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .facets(Arrays.asList("field", "field2"))
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"facets\": [\"field\", \"field2\"]}", json, false);
     }
@@ -93,7 +96,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("test")
                 .facet("field")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"test\", \"facets\": [\"field\"]}", json, false);
     }
@@ -103,7 +106,7 @@ public class SearchRequestBuilderTest {
                 .q("test")
                 .filter("field = value")
                 .clearFilters()
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"q\": \"test\"}", json, false);
     }
@@ -114,7 +117,7 @@ public class SearchRequestBuilderTest {
                 .q("")
                 .filter("")
                 .retrieveAttributes(Arrays.asList("attr1", "attr2"))
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"attributesToRetrieve\": [\"attr1\", \"attr2\"]}", json, false);
     }
@@ -124,7 +127,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("")
                 .retrieveAttributes(Collections.emptyList())
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{}", json, false);
     }
@@ -135,7 +138,7 @@ public class SearchRequestBuilderTest {
                 .q("")
                 .filter("")
                 .fetchOnly(Arrays.asList("attr1", "attr2"))
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"attributesToRetrieve\": [\"attr1\", \"attr2\"]}", json, false);
     }
@@ -146,7 +149,7 @@ public class SearchRequestBuilderTest {
                 .q("")
                 .startingAt(3)
                 .fetch(25)
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"offset\":3,\"limit\":25}", json, false);
     }
@@ -156,7 +159,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("")
                 .filter("")
-                .json();
+                .json(jsonWriter);
 
         Assertions.assertFalse(json.contains("attributesToCrop"));
         Assertions.assertFalse(json.contains("cropLength"));
@@ -168,7 +171,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("")
                 .cropAllRetrievedAttributes()
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"cropMarker\":\"…\",\"attributesToCrop\":[\"*\"]}", json, false);
     }
@@ -181,7 +184,7 @@ public class SearchRequestBuilderTest {
                 .cropAttributes(Arrays.asList("attr1", "attr2"))
                 .cropLength(3)
                 .markCropBoundariesWith("#")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"attributesToCrop\": [\"attr1\", \"attr2\"]}", json, false);
         JSONAssert.assertEquals("{\"cropLength\": 3}", json, false);
@@ -193,7 +196,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("")
                 .highlightAllRetrievedAttributes()
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"attributesToHighlight\": [\"*\"]}", json, false);
         JSONAssert.assertEquals("{\"highlightPreTag\": \"<em>\"}", json, false);
@@ -205,7 +208,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("search")
                 .showMatchesPosition(true)
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"showMatchesPosition\":true}", json, false);
     }
@@ -214,7 +217,7 @@ public class SearchRequestBuilderTest {
     void shouldAddSort() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .sortAscBy("uid")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"sort\":[\"uid:asc\"]}", json, false);
     }
@@ -223,7 +226,7 @@ public class SearchRequestBuilderTest {
     void shouldAddSort_Desc() throws Exception {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .sortDescBy("uid")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"sort\":[\"uid:desc\"]}", json, false);
     }
@@ -234,7 +237,7 @@ public class SearchRequestBuilderTest {
                 .q("search")
                 .sortAscBy("uid")
                 .sortDescBy("name")
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"sort\":[\"uid:asc\", \"name:desc\"]}", json, false);
     }
@@ -245,7 +248,7 @@ public class SearchRequestBuilderTest {
                 .q("search")
                 .sortAscBy("uid")
                 .sortByDistanceFromPoint(48.8561446, 2.2978204, ASC)
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"sort\":[\"uid:asc\", \"_geoPoint(48.8561446, 2.2978204):asc\"]}", json, false);
     }
@@ -255,7 +258,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("search")
                 .matchingStrategy(MatchingStrategy.LAST)
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"matchingStrategy\": \"last\"}", json, false);
     }
@@ -265,7 +268,7 @@ public class SearchRequestBuilderTest {
         var json = MeiliQueryBuilder.fromIndex("index")
                 .q("search")
                 .matchDocumentsContainingAllQueryTerms()
-                .json();
+                .json(jsonWriter);
 
         JSONAssert.assertEquals("{\"matchingStrategy\": \"all\"}", json, false);
     }

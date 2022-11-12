@@ -1,7 +1,5 @@
 package org.raissi.meilisearch.client;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.WriteCanDefinePrimaryKey;
@@ -16,9 +14,9 @@ import org.raissi.meilisearch.client.querybuilder.search.*;
 import org.raissi.meilisearch.client.querybuilder.tasks.GetTask;
 import org.raissi.meilisearch.client.response.exceptions.MeiliSearchException;
 import org.raissi.meilisearch.client.response.handler.*;
+import org.raissi.meilisearch.client.response.model.GetResults;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
 import org.raissi.meilisearch.client.response.model.MeiliWriteResponse;
-import org.raissi.meilisearch.client.response.model.GetResults;
 import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.control.Try;
 import org.slf4j.Logger;
@@ -28,6 +26,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.util.Optional.ofNullable;
+
 public class MeiliClientOkHttp implements MeiliClient {
 
     private static final Logger logger = LoggerFactory.getLogger(MeiliClientOkHttp.class);
@@ -35,14 +35,18 @@ public class MeiliClientOkHttp implements MeiliClient {
     public static final String BEARER = "Bearer ";
 
     private final OkHttpClient okHttpClient;
-    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private final String meiliSearchHost;
     private final String searchKey;
 
-    public MeiliClientOkHttp(OkHttpClient okHttpClient, String meiliSearchHost, String searchKey) {
+    private final JsonWriter jsonWriter;
+    private final JsonReader jsonReader;
+
+    public MeiliClientOkHttp(OkHttpClient okHttpClient, String meiliSearchHost, String searchKey, JsonWriter jsonWriter, JsonReader jsonReader) {
         this.okHttpClient = okHttpClient;
         this.meiliSearchHost = meiliSearchHost;
         this.searchKey = searchKey;
+        this.jsonWriter = jsonWriter;
+        this.jsonReader = jsonReader;
     }
 
     public static WithOkHttpClient usingOkHttp(OkHttpClient okHttpClient) {
@@ -72,7 +76,7 @@ public class MeiliClientOkHttp implements MeiliClient {
     @Override
     public Try<MeiliTask> get(GetTask get) {
         return get(get, new DefaultMeiliErrorHandler(get))
-                .andThenTry(responseBody -> objectMapper.readValue(responseBody, MeiliTask.class));
+                .andThenTry(responseBody -> jsonReader.readValue(responseBody, MeiliTask.class));
     }
 
     @Override
@@ -93,13 +97,13 @@ public class MeiliClientOkHttp implements MeiliClient {
     @Override
     public <T> Try<GetResults<T>> get(GetDocuments get, Class<T> resultType) {
         return get(get)
-                .andThenTry(responseBody -> parseGetResults(responseBody, resultType));
+                .andThenTry(responseBody -> jsonReader.parseGetResults(responseBody, resultType));
     }
 
     @Override
     public <T> Try<T> get(GetDocument get, Class<T> resultType) {
         return get(get)
-                .andThenTry(responseBody -> objectMapper.readValue(responseBody, resultType));
+                .andThenTry(responseBody -> jsonReader.readValue(responseBody, resultType));
     }
 
     @Override
@@ -107,7 +111,7 @@ public class MeiliClientOkHttp implements MeiliClient {
         return get(get)
                 .andThenTry(responseBody -> {
                     if (responseBody.isPresent() ){
-                        return Optional.of(objectMapper.readValue(responseBody.orElse(null), resultType));
+                        return Optional.of(jsonReader.readValue(responseBody.orElse(null), resultType));
                     }
                     return Optional.empty();
                 });
@@ -116,14 +120,14 @@ public class MeiliClientOkHttp implements MeiliClient {
     @Override
     public <T> Try<SearchResponse<T>> search(SearchRequest request, Class<T> resultType) {
         return search(request)
-                .andThenTry(rawResponse -> parseSearchResults(rawResponse, resultType));
+                .andThenTry(rawResponse -> jsonReader.parseSearchResults(rawResponse, resultType));
     }
     @Override
     public Try<String> search(SearchRequest searchRequest) {
         String path = searchRequest.path();
         HttpUrl url = url(Map.of(), path);
 
-        String searchJson = searchRequest.json();
+        String searchJson = searchRequest.json(jsonWriter);
         logger.debug("Searching in {}, query: {}", url, searchJson);
         Request request = new Request.Builder()
                 .url(url)
@@ -137,14 +141,14 @@ public class MeiliClientOkHttp implements MeiliClient {
     //TODO check whether to overload with a callback method
     @Override
     public <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override) {
-        Function<Request.Builder, Request> methodBuilder = builder -> builder.post(RequestBody.create(override.json(), JSON))
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.post(RequestBody.create(override.json(jsonWriter), JSON))
                 .build();
         return write(override, methodBuilder);
     }
 
     @Override
     public <T> Try<CanBlockOnTask> upsert(UpsertDocuments<T> upsert) {
-        Function<Request.Builder, Request> methodBuilder = builder -> builder.put(RequestBody.create(upsert.json(), JSON))
+        Function<Request.Builder, Request> methodBuilder = builder -> builder.put(RequestBody.create(upsert.json(jsonWriter), JSON))
                 .build();
         return write(upsert, methodBuilder);
     }
@@ -191,7 +195,7 @@ public class MeiliClientOkHttp implements MeiliClient {
     @Override
     public Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds) {
         Function<Request.Builder, Request> methodBuilder = builder ->
-                            builder.delete(RequestBody.create(deleteByIds.json(), JSON))
+                            builder.delete(RequestBody.create(deleteByIds.json(jsonWriter), JSON))
                                     .build();
         return write(deleteByIds, methodBuilder, Map.of());
     }
@@ -223,7 +227,7 @@ public class MeiliClientOkHttp implements MeiliClient {
         Request request = methodBuilder.apply(requestBuilder);
 
         return Try.of(() -> executeAndThrowIfEmptyException(request, new DefaultMeiliErrorHandler(write)))
-                .andThenTry(rawResponse -> objectMapper.readValue(rawResponse, MeiliWriteResponse.class))
+                .andThenTry(rawResponse -> jsonReader.readValue(rawResponse, MeiliWriteResponse.class))
                 .andThenTry(writeResponse -> new SimpleBlockingCapableTaskHandler(writeResponse, this));
     }
 
@@ -290,44 +294,63 @@ public class MeiliClientOkHttp implements MeiliClient {
         return responseHandler.buildException(response.code(), calledResource, responseHeaders, respBody);
     }
 
-    private <T> GetResults<T> parseGetResults(String responseBody, Class<T> resultType) throws Exception {
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(GetResults.class, resultType);
-        return objectMapper.readValue(responseBody, type);
-    }
-
-    private <T> SearchResponse<T> parseSearchResults(String responseBody, Class<T> resultType) throws Exception {
-        JavaType type = objectMapper.getTypeFactory().constructParametricType(SearchResponse.class, resultType);
-        return objectMapper.readValue(responseBody, type);
-    }
-
-
-    static class MeiliClientOkHttpBuilder implements MeiliClientOkHttp.WithOkHttpClient, WithHostSet {
+    static class MeiliClientOkHttpBuilder implements MeiliClientOkHttp.WithOkHttpClient,
+            WithHostSet<MeiliClientOkHttp>,
+            WithCustomJsonWriter<MeiliClientOkHttp>,
+            WithCustomJsonReader<MeiliClientOkHttp> {
         private final OkHttpClient okHttpClient;
         private String meilisearchHost;
+
+        private JsonWriter jsonWriter;
+        private JsonReader jsonReader;
 
         MeiliClientOkHttpBuilder(OkHttpClient okHttpClient) {
             this.okHttpClient = okHttpClient;
         }
 
         @Override
-        public WithHostSet forHost(String hostUrl) {
+        public WithHostSet<MeiliClientOkHttp> forHost(String hostUrl) {
             this.meilisearchHost = hostUrl;
             return this;
         }
 
         @Override
+        public WithCustomJsonWriter<MeiliClientOkHttp> withJsonWriter(JsonWriter jsonWriter) {
+            this.jsonWriter = jsonWriter;
+            return this;
+        }
+
+        @Override
         public MeiliClientOkHttp withSearchKey(String key) {
+
             return new MeiliClientOkHttp(this.okHttpClient,
                     this.meilisearchHost,
-                    key);
+                    key,
+                    ofNullable(jsonWriter).orElseGet(JacksonJsonReaderWriter::new),
+                    ofNullable(jsonReader).orElseGet(JacksonJsonReaderWriter::new));
+        }
+
+        @Override
+        public WithCustomJsonReader<MeiliClientOkHttp> andJsonReader(JsonReader jsonReader) {
+            this.jsonReader = jsonReader;
+            return this;
         }
     }
     public interface WithOkHttpClient {
-        WithHostSet forHost(String hostUrl);
+        WithHostSet<MeiliClientOkHttp> forHost(String hostUrl);
     }
 
-    public interface WithHostSet {
-        MeiliClientOkHttp withSearchKey(String key);
+    public interface WithCustomJsonWriter<CLIENT> {
+        WithCustomJsonReader<CLIENT> andJsonReader(JsonReader jsonReader);
+    }
+
+    public interface WithCustomJsonReader<CLIENT> {
+        CLIENT withSearchKey(String key);
+    }
+
+    public interface WithHostSet<CLIENT> {
+        CLIENT withSearchKey(String key);
+        WithCustomJsonWriter<CLIENT> withJsonWriter(JsonWriter jsonWriter);
     }
 
 
