@@ -45,7 +45,7 @@ public interface MeiliClient {
 
     <T> Try<CanBlockOnTask> override(OverrideDocuments<T> override);
 
-    <T> Try<CanBlockOnTask> upsert(UpsertDocuments<T> upsert);
+    Try<CanBlockOnTask> upsert(UpsertDocuments upsert);
 
     Try<CanBlockOnTask> delete(DeleteIndex deleteIndex);
 

@@ -5,6 +5,8 @@
         </encoder>
     </appender>
 
+    <logger name="org.raissi.meilisearch.client" level="debug"/>
+
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>

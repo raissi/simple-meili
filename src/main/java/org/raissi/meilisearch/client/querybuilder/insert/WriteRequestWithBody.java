@@ -4,6 +4,6 @@ import org.raissi.meilisearch.client.querybuilder.HasBody;
 
 import java.util.Optional;
 
-public interface WriteRequestWithBody<T> extends WriteRequest, HasBody {
+public interface WriteRequestWithBody extends WriteRequest, HasBody {
 
 }

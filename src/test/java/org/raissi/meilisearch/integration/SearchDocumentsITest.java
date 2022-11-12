@@ -34,7 +34,7 @@ public class SearchDocumentsITest extends BaseIntTest {
         OkHttpClient okHttpClient = new OkHttpClient();
 
         List<Author> authors = authors();
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex(indexName)
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex(indexName)
                 .upsertDocuments(authors)
                 .withPrimaryKey("uid");
         client.upsert(upsert)

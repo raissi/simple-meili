@@ -147,7 +147,7 @@ public class MeiliClientOkHttp implements MeiliClient {
     }
 
     @Override
-    public <T> Try<CanBlockOnTask> upsert(UpsertDocuments<T> upsert) {
+    public Try<CanBlockOnTask> upsert(UpsertDocuments upsert) {
         Function<Request.Builder, Request> methodBuilder = builder -> builder.put(RequestBody.create(upsert.json(jsonWriter), JSON))
                 .build();
         return write(upsert, methodBuilder);
@@ -195,7 +195,7 @@ public class MeiliClientOkHttp implements MeiliClient {
     @Override
     public Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds) {
         Function<Request.Builder, Request> methodBuilder = builder ->
-                            builder.delete(RequestBody.create(deleteByIds.json(jsonWriter), JSON))
+                            builder.post(RequestBody.create(deleteByIds.json(jsonWriter), JSON))
                                     .build();
         return write(deleteByIds, methodBuilder, Map.of());
     }
@@ -206,7 +206,7 @@ public class MeiliClientOkHttp implements MeiliClient {
         return deleteByIds(byIds);
     }
 
-    private <T, X extends WriteCanDefinePrimaryKey<T, X>> Try<CanBlockOnTask> write(WriteCanDefinePrimaryKey<T, X> write,
+    private <X extends WriteCanDefinePrimaryKey<X>> Try<CanBlockOnTask> write(WriteCanDefinePrimaryKey<X> write,
                                                                                     Function<Request.Builder, Request> methodBuilder) {
         Map<String, String> params = write.primaryKey()
                 .map(p -> Map.of("primaryKey", p))

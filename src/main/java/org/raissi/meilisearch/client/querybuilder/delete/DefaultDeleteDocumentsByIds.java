@@ -7,7 +7,7 @@ import java.util.List;
 public class DefaultDeleteDocumentsByIds extends WriteWithBody<String> implements DeleteDocumentsByIds {
 
     public DefaultDeleteDocumentsByIds(String index, List<String> documentIds) {
-        super(index, documentIds);
+        super("/indexes/"+index+"/"+"documents/delete-batch", documentIds, true);
     }
 
 }

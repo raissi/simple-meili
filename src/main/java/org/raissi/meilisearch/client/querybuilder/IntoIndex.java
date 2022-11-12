@@ -29,5 +29,5 @@ public interface IntoIndex {
      *          {@link org.raissi.meilisearch.client.MeiliClient#upsert(UpsertDocuments)}
      * @param <T> Type of the documents
      */
-    <T> UpsertDocuments<T> upsertDocuments(List<T> documents);
+    <T> UpsertDocuments upsertDocuments(List<T> documents);
 }

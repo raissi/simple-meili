@@ -120,7 +120,7 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
     }
 
     @Override
-    public <T> UpsertDocuments<T> upsertDocuments(List<T> documents) {
+    public <T> UpsertDocuments upsertDocuments(List<T> documents) {
         return new DefaultUpsertDocuments<>(this.index, documents);
     }
 

@@ -18,6 +18,11 @@ public abstract class WriteWithBody<T> extends BaseWrite implements HasBody {
         this.documents = documents;
     }
 
+    public WriteWithBody(String indexOrPath, List<T> documents, boolean completePathComputed) {
+        super(indexOrPath, completePathComputed);
+        this.documents = documents;
+    }
+
     @Override
     public String json(JsonWriter jsonWriter) {
         return jsonWriter.json(documents);

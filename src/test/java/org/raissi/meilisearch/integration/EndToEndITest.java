@@ -1,33 +1,45 @@
 package org.raissi.meilisearch.integration;
 
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.raissi.meilisearch.client.MeiliClient;
 import org.raissi.meilisearch.client.MeiliClientOkHttp;
 import org.raissi.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import org.raissi.meilisearch.client.querybuilder.insert.UpsertDocuments;
+import org.raissi.meilisearch.client.querybuilder.search.GetDocuments;
+import org.raissi.meilisearch.client.querybuilder.search.JacksonJsonReaderWriter;
 import org.raissi.meilisearch.client.querybuilder.search.SearchRequest;
 import org.raissi.meilisearch.client.response.exceptions.NotFoundException;
 import org.raissi.meilisearch.client.response.handler.CanBlockOnTask;
+import org.raissi.meilisearch.client.response.model.GetResults;
 import org.raissi.meilisearch.client.response.model.MeiliTask;
+import org.raissi.meilisearch.client.response.model.SearchResponse;
 import org.raissi.meilisearch.model.Author;
+import org.raissi.meilisearch.model.Author.AuthorFormatted;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.raissi.meilisearch.client.MeiliClientOkHttp.JSON;
 import static org.raissi.meilisearch.client.response.model.MeiliAsyncWriteResponse.TASK_SUCCEEDED;
 
 @Testcontainers
 public class EndToEndITest {
 
+    static JacksonJsonReaderWriter jsonReaderWriter = new JacksonJsonReaderWriter();
     @Container
     public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v0.29.1"))
             .withExposedPorts(7700)
@@ -48,24 +60,16 @@ public class EndToEndITest {
         OkHttpClient okHttpClient = new OkHttpClient();
 
         client = MeiliClientOkHttp.usingOkHttp(okHttpClient)
-                //.withJsonWriter(jsonWriter).andJsonReader(jsonReader)
                 .forHost(hostUrl)
+                .withJsonWriter(jsonReaderWriter).andJsonReader(jsonReaderWriter)//This is default, so may be omitted if using Jackson
                 .withSearchKey("masterKey");
-
-        MeiliClientOkHttp ssss = MeiliClientOkHttp.usingOkHttp(okHttpClient)
-                .forHost(hostUrl)
-                .withJsonWriter(null).andJsonReader(null)
-                .withSearchKey("masterKey")
-                ;
-
-
     }
 
     @Test
-    void doEndToEnd() {
+    void doEndToEnd() throws Exception {
         //1. Index the data
         AtomicBoolean upsertSuccess = new AtomicBoolean(false);
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex(AUTHORS_END_TO_END).upsertDocuments(authors()).withPrimaryKey("uid");
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex(AUTHORS_END_TO_END).upsertDocuments(authors()).withPrimaryKey("uid");
         Optional<MeiliTask> insertResult = client.upsert(upsert)
                 .andThen(CanBlockOnTask::waitForCompletion)
                 .ifSuccess(s -> upsertSuccess.set(true))
@@ -77,10 +81,67 @@ public class EndToEndITest {
             assertThat(res.getStatus()).isEqualTo(TASK_SUCCEEDED);
         });
 
+        // Define filterable attributes: for now simple-meili does not support admin operations
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(hostUrl+"/indexes/"+AUTHORS_END_TO_END+"/settings/filterable-attributes")
+                .addHeader("Authorization", "Bearer masterKey")
+                .put(RequestBody.create("[\"country\", \"uid\"]", JSON))
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new RuntimeException();
+            }
+            Thread.sleep(300);
+        }
+
         //2. search the data:
-        SearchRequest uid4Request = MeiliQueryBuilder.fromIndex(AUTHORS_END_TO_END)
-                .filter("uid = 4")
-                ;
+        SearchRequest uid3Request = MeiliQueryBuilder.fromIndex(AUTHORS_END_TO_END)
+                .filter("uid = 3");
+
+        List<Author> authorsFromSearchRes = client.search(uid3Request, Author.class)
+                .andThenTry(SearchResponse::getHits)
+                .orElse(Collections::emptyList);
+        assertThat(authorsFromSearchRes).hasSize(1);
+        assertThat(authorsFromSearchRes).allMatch(author -> author.getUid().equals("3"));
+
+        //3. Delete a doc
+        AtomicBoolean deleteSuccess = new AtomicBoolean(false);
+        Optional<MeiliTask> deleteResult = client.deleteByIds(AUTHORS_END_TO_END, Collections.singleton("3"))
+                .andThen(CanBlockOnTask::waitForCompletion)
+                .ifSuccess(s -> deleteSuccess.set(true))
+                .ignoreErrors();//Do not ignore errors :-P
+        assertThat(deleteSuccess).isTrue();
+        assertThat(deleteResult).hasValueSatisfying(res -> {
+            assertThat(res.getStatus()).isEqualTo(TASK_SUCCEEDED);
+            assertThat(res.getOperationType()).isEqualTo("documentDeletion");
+        });
+
+        //4. Get all documents
+        GetDocuments getDocuments = MeiliQueryBuilder.fromIndex(AUTHORS_END_TO_END).get().fetch(5).startingAt(0);
+        List<Author> authorsFromGetDocuments = client.get(getDocuments, Author.class)
+                .andThenTry(GetResults::getResults)
+                .orElse(Collections::emptyList);
+        assertThat(authorsFromGetDocuments).hasSize(4);
+
+        //5. Search docs and get highlights
+        SearchRequest searchGeology = MeiliQueryBuilder.fromIndex(AUTHORS_END_TO_END).q("geology").highlightAllRetrievedAttributes();
+        List<AuthorFormatted> authorsFromSearchGeology = client.search(searchGeology, AuthorFormatted.class)
+                .andThenTry(SearchResponse::getHits)
+                .ifFailure(Throwable::printStackTrace)
+                .orElse(Collections::emptyList);
+        assertThat(authorsFromSearchGeology).hasSize(1);
+        assertThat(authorsFromSearchGeology).allMatch(author -> author.getUid().equals("4"));
+
+        //Last, we delete the index:
+        Optional<MeiliTask> deleteIndexRes = client.deleteIndex(AUTHORS_END_TO_END)
+                .andThen(CanBlockOnTask::waitForCompletion)
+                .ignoreErrors();
+        assertThat(deleteIndexRes).hasValueSatisfying(res -> {
+            assertThat(res.getStatus()).isEqualTo(TASK_SUCCEEDED);
+            assertThat(res.getOperationType()).isEqualTo("indexDeletion");
+        });
     }
 
     public static List<Author> authors() {

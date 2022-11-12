@@ -27,7 +27,7 @@ public class WriteDocumentsITest extends BaseIntTest {
     @Test
     void shouldInsertAndReturnEnqueued() {
         AtomicBoolean upsertSuccess = new AtomicBoolean(false);
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex("writersInsert").upsertDocuments(authors()).withPrimaryKey("uid");
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex("writersInsert").upsertDocuments(authors()).withPrimaryKey("uid");
         Optional<CanBlockOnTask> upsertResponse = client.upsert(upsert)
                 .ifSuccess(s -> upsertSuccess.set(true))
                 .ignoreErrors();
@@ -38,7 +38,7 @@ public class WriteDocumentsITest extends BaseIntTest {
     @Test
     void shouldInsertAndBlockUntilSucceeded() {
         AtomicBoolean upsertSuccess = new AtomicBoolean(false);
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex("writersInsertBlock").upsertDocuments(authors()).withPrimaryKey("uid");
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex("writersInsertBlock").upsertDocuments(authors()).withPrimaryKey("uid");
         Optional<MeiliTask> upsertResponse = client.upsert(upsert)
                 .andThen(CanBlockOnTask::waitForCompletion)
                 .ifSuccess(s -> upsertSuccess.set(true))
@@ -74,7 +74,7 @@ public class WriteDocumentsITest extends BaseIntTest {
     void shouldOverrideAndBlockUntilSucceeded() {
         String indexName = "writersOverride";
         List<Author> authors = authors();
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex(indexName).upsertDocuments(authors).withPrimaryKey("uid");
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex(indexName).upsertDocuments(authors).withPrimaryKey("uid");
         client.upsert(upsert)
                 .andThen(CanBlockOnTask::waitForCompletion);
 
@@ -102,7 +102,7 @@ public class WriteDocumentsITest extends BaseIntTest {
     void shouldTryOverrideAndBlockUntilFailed() {
         String indexName = "writersOverrideBadMapping";
         List<Author> authors = authors();
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex(indexName).upsertDocuments(authors).withPrimaryKey("uid");
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex(indexName).upsertDocuments(authors).withPrimaryKey("uid");
         client.upsert(upsert)
                 .andThen(CanBlockOnTask::waitForCompletion);
 

@@ -27,7 +27,7 @@ public class DeleteDocumentsITest extends BaseIntTest {
     public void insertAuthors(TestInfo info) {
         String indexName = info.getDisplayName();
         List<Author> authors = authors();
-        UpsertDocuments<Author> upsert = MeiliQueryBuilder.intoIndex(indexName).upsertDocuments(authors).withPrimaryKey("uid");
+        UpsertDocuments upsert = MeiliQueryBuilder.intoIndex(indexName).upsertDocuments(authors).withPrimaryKey("uid");
         client.upsert(upsert)
                 .andThen(CanBlockOnTask::waitForCompletion);
     }
