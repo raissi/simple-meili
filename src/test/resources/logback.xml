@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <logger name="org.raissi.meilisearch.client" level="debug"/>
+    <logger name="io.github.meilisearch.client" level="debug"/>
 
     <root level="info">
         <appender-ref ref="STDOUT" />

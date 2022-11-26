@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.raissi.meilisearch</groupId>
+  <groupId>io.github.meilisearch</groupId>
   <artifactId>simple-meili</artifactId>
   <version>0.29.1</version>
 
@@ -195,7 +195,7 @@
         <artifactId>jacoco-maven-plugin</artifactId>
         <configuration>
           <excludes>
-            <exclude>org/raissi/meilisearch/client/response/model/*</exclude>
+            <exclude>io/github/meilisearch/client/response/model/*</exclude>
           </excludes>
         </configuration>
         <executions>
