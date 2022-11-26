@@ -3,6 +3,7 @@ package org.raissi.meilisearch.control;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -29,6 +30,20 @@ public class TryTest {
                 .map(Throwable::getMessage)
                 .orElse(null);
         assertThat(exceptionMessage).isEqualTo("Failure");
+    }
+
+    @Test
+    public void shouldFoldException() {
+        String foldedResult = Try.of(this::alwaysFailure)
+                .fold(Throwable::getMessage, Function.identity());
+        assertThat(foldedResult).isEqualTo("Failure");
+    }
+
+    @Test
+    public void shouldFoldSuccess() {
+        String foldedResult = Try.of(this::alwaysSuccess)
+                .fold(Throwable::getMessage, Function.identity());
+        assertThat(foldedResult).isEqualTo("OK");
     }
 
     private String alwaysSuccess() {
