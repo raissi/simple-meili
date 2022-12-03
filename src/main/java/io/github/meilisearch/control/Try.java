@@ -8,12 +8,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A container object which may contain a value or an Exception.<br/>
- * A method returning a Try object means that it may fail.<br/>
+ * A container object which may contain a value or an Exception.<br>
+ *
+ * A method returning a Try object means that it may fail.<br>
  * This class is almost completely inspired by the
  * <a href="https://github.com/vavr-io/vavr/blob/master/src/main/java/io/vavr/control/Try.java">Vavr library's</a>
  * and also  <a href="https://junit.org/junit5/docs/5.4.0/api/org/junit/platform/commons/function/Try.html">JUnit's Try</a>
- * @param <T>
+ * @param <T> the type of the contained value
  */
 public interface Try<T> {
 
@@ -57,6 +58,7 @@ public interface Try<T> {
      * transformer's outcome; if this {@code Try} is a failure, do nothing.
      *
      * @param transformer the transformer to try; must not be {@code null}
+     * @param <U> the type of the new value
      * @return a succeeded or failed {@code Try}; never {@code null}
      */
     <U> Try<U> andThenTry(Transformer<T, U> transformer);
@@ -67,6 +69,7 @@ public interface Try<T> {
      * failure, do nothing.
      *
      * @param function the function to apply; must not be {@code null}
+     * @param <U> the type of the new value
      * @return a succeeded or failed {@code Try}; never {@code null}
      */
     <U> Try<U> andThen(Function<T, Try<U>> function);
@@ -77,6 +80,7 @@ public interface Try<T> {
      * if this {@code Try} is a success, do nothing.
      *
      * @param function the action to try; must not be {@code null}
+     * @param <X> the type of the new Exception
      * @return a succeeded or failed {@code Try}; never {@code null}
      */
     <X extends Exception> Try<T> mapFailure(Function<Exception, X> function);
@@ -115,9 +119,10 @@ public interface Try<T> {
      * the resulting {@code X}; if this {@code Try} is a success, returns the success value.
      *
      * @param exceptionMapper the supplier to call; must not be {@code null}
+     * @param <X> the type of the new Exception
      * @return the encapsulated value or throws {@code X}
+     * @throws X the result of mapping the failure
      */
-
     <X extends Exception> T orElseThrow(Function<Exception, X> exceptionMapper) throws X;
 
     /**
@@ -132,7 +137,8 @@ public interface Try<T> {
 
         /**
          * Apply this transformer to the supplied value.
-         *
+         * @param value the value to be transformed
+         * @return the result of transformation
          * @throws Exception if the transformation fails
          */
         T apply(S value) throws Exception;
