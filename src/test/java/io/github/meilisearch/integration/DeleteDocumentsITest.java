@@ -14,8 +14,11 @@ import io.github.meilisearch.model.Author;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static io.github.meilisearch.client.response.model.MeiliAsyncWriteResponse.TASK_ENQUEUED;
 import static io.github.meilisearch.integration.WriteDocumentsITest.authors;
 
 
@@ -43,7 +46,7 @@ public class DeleteDocumentsITest extends BaseIntTest {
                 .ifSuccess(s -> deleteSuccess.set(true))
                 .ignoreErrors();
         Assertions.assertTrue(deleteSuccess.get());
-        Assertions.assertEquals(MeiliAsyncWriteResponse.TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
+        Assertions.assertEquals(TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
     }
 
     @Test
@@ -56,22 +59,24 @@ public class DeleteDocumentsITest extends BaseIntTest {
                 .ifSuccess(s -> deleteSuccess.set(true))
                 .ignoreErrors();
         Assertions.assertTrue(deleteSuccess.get());
-        Assertions.assertEquals(MeiliAsyncWriteResponse.TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
+        Assertions.assertEquals(TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
     }
 
     @Test
     @DisplayName("shouldDeleteByIdsAndReturnEnqueued")
-    void shouldDeleteByIdsAndReturnEnqueued(TestInfo info) {
+    void shouldDeleteByIdsAndReturnEnqueued(TestInfo info) throws Exception {
         String indexName = info.getDisplayName();
         List<String> authorsIds = authors().stream().map(Author::getUid).collect(Collectors.toList());
 
-        AtomicBoolean deleteSuccess = new AtomicBoolean(false);
+        AtomicReference<String> asyncReturn = new AtomicReference<>();
         DeleteDocumentsByIds delete = MeiliQueryBuilder.fromIndex(indexName).delete(authorsIds);
-        Optional<CanBlockOnTask> deleteByIds = client.deleteByIds(delete)
-                .ifSuccess(s -> deleteSuccess.set(true))
-                .ignoreErrors();
-        Assertions.assertTrue(deleteSuccess.get());
-        Assertions.assertEquals(MeiliAsyncWriteResponse.TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
+        MeiliTask deleteByIds = client.deleteByIds(delete)
+                .ifSuccess(s -> asyncReturn.set(s.initialTaskStatus()))
+                .andThen(CanBlockOnTask::waitForCompletion)
+                .orElseThrow(Function.identity());
+        Assertions.assertEquals(TASK_ENQUEUED, asyncReturn.get());
+        Assertions.assertEquals(MeiliAsyncWriteResponse.TASK_SUCCEEDED, deleteByIds.getStatus());
+        Assertions.assertEquals(authorsIds.size(), deleteByIds.getDetails().getDeletedDocuments());
     }
 
     @Test
@@ -85,7 +90,7 @@ public class DeleteDocumentsITest extends BaseIntTest {
                 .ifSuccess(s -> deleteSuccess.set(true))
                 .ignoreErrors();
         Assertions.assertTrue(deleteSuccess.get());
-        Assertions.assertEquals(MeiliAsyncWriteResponse.TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
+        Assertions.assertEquals(TASK_ENQUEUED, deleteByIds.map(MeiliAsyncWriteResponse::initialTaskStatus).orElse(null));
     }
 
     @Test
