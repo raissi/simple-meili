@@ -37,7 +37,7 @@ public class EndToEndITest {
 
     static JacksonJsonReaderWriter jsonReaderWriter = new JacksonJsonReaderWriter();
     @Container
-    public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v0.29.1"))
+    public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v0.30.1"))
             .withExposedPorts(7700)
             .withReuse(true)
             .withEnv("MEILI_MASTER_KEY", "masterKey")

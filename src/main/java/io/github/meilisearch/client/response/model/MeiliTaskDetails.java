@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class MeiliTaskDetails {
-    private Integer receivedDocumentIds;
+    private Integer providedIds;
     private Integer deletedDocuments;
 
     //For index tasks

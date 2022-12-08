@@ -69,6 +69,7 @@ public class SimpleBlockingCapableTaskHandler implements CanBlockOnTask {
             .ifFailure(e -> exceptionGettingStatus.set(Optional.of(e)));
 
             status = currentTask.andThenTry(MeiliTask::getStatus)
+                    .ifFailure(e -> logger.error("Failed to get task status", e))
                     .orElse(() -> "serverError");
             calls++;
             logger.debug("On call #{} the returned status for task {} is {}", calls, taskId(), status);
