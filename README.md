@@ -25,7 +25,7 @@ but it was hugely inspired from the [Vavr library](https://www.vavr.io/), and al
 <dependency>
     <groupId>io.github.raissi</groupId>
     <artifactId>simple-meili-java</artifactId>
-    <version>0.29.1</version>
+    <version>0.30.1</version>
 </dependency>
 ```
 Development of this client started with version `0.29.1` of Meilsearch. Older versions are not supported.
