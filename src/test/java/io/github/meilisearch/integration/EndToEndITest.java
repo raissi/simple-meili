@@ -2,6 +2,7 @@ package io.github.meilisearch.integration;
 
 import io.github.meilisearch.client.MeiliClientOkHttp;
 import io.github.meilisearch.client.querybuilder.MeiliQueryBuilder;
+import io.github.meilisearch.client.querybuilder.delete.DeleteDocumentsByFilter;
 import io.github.meilisearch.client.querybuilder.search.GetDocuments;
 import io.github.meilisearch.client.querybuilder.search.SearchRequest;
 import io.github.meilisearch.client.response.handler.CanBlockOnTask;
@@ -37,7 +38,7 @@ public class EndToEndITest {
 
     static JacksonJsonReaderWriter jsonReaderWriter = new JacksonJsonReaderWriter();
     @Container
-    public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v0.30.1"))
+    public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v1.2.0"))
             .withExposedPorts(7700)
             .withReuse(true)
             .withEnv("MEILI_MASTER_KEY", "masterKey")
@@ -129,6 +130,19 @@ public class EndToEndITest {
                 .orElse(Collections::emptyList);
         assertThat(authorsFromSearchGeology).hasSize(1);
         assertThat(authorsFromSearchGeology).allMatch(author -> author.getUid().equals("4"));
+
+        //6. Delete authors from England:
+        AtomicBoolean filterDeletion = new AtomicBoolean(false);
+        DeleteDocumentsByFilter deleteDocumentsByFilter = MeiliQueryBuilder.fromIndex(AUTHORS_END_TO_END).deleteByFilter("country = England");
+        Optional<MeiliTask> deleteByFilterResult = client.deleteByFilter(deleteDocumentsByFilter)
+                .andThen(CanBlockOnTask::waitForCompletion)
+                .ifSuccess(s -> filterDeletion.set(true))
+                .ignoreErrors();//Do not ignore errors :-P
+        assertThat(filterDeletion).isTrue();
+        assertThat(deleteByFilterResult).hasValueSatisfying(res -> {
+            assertThat(res.getStatus()).isEqualTo(TASK_SUCCEEDED);
+            assertThat(res.getOperationType()).isEqualTo("documentDeletion");
+        });
 
         //Last, we delete the index:
         Optional<MeiliTask> deleteIndexRes = client.deleteIndex(AUTHORS_END_TO_END)

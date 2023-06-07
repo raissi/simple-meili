@@ -1,6 +1,6 @@
 package io.github.meilisearch.client;
 
-import io.github.meilisearch.client.querybuilder.delete.DeleteIndex;
+import io.github.meilisearch.client.querybuilder.delete.*;
 import io.github.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import io.github.meilisearch.client.querybuilder.search.GetDocumentIgnoreNotFound;
 import io.github.meilisearch.client.querybuilder.search.GetDocuments;
@@ -9,9 +9,6 @@ import io.github.meilisearch.client.querybuilder.tasks.GetTask;
 import io.github.meilisearch.client.response.handler.CanBlockOnTask;
 import io.github.meilisearch.client.response.model.MeiliTask;
 import io.github.meilisearch.client.response.model.SearchResponse;
-import io.github.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
-import io.github.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
-import io.github.meilisearch.client.querybuilder.delete.DeleteOneDocument;
 import io.github.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import io.github.meilisearch.client.querybuilder.search.GetDocument;
 import io.github.meilisearch.client.response.model.GetResults;
@@ -60,6 +57,8 @@ public interface MeiliClient {
     Try<CanBlockOnTask> deleteAll(String index);
 
     Try<CanBlockOnTask> deleteByIds(DeleteDocumentsByIds deleteByIds);
+
+    Try<CanBlockOnTask> deleteByFilter(DeleteDocumentsByFilter deleteByFilter);
 
     <T> Try<CanBlockOnTask> deleteByIds(String index, Collection<T> ids);
 }

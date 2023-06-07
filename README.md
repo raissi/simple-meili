@@ -25,7 +25,7 @@ but it was hugely inspired from the [Vavr library](https://www.vavr.io/), and al
 <dependency>
     <groupId>io.github.raissi</groupId>
     <artifactId>simple-meili-java</artifactId>
-    <version>0.30.1</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 Development of this client started with version `0.29.1` of Meilsearch. Older versions are not supported.
@@ -85,4 +85,6 @@ Try<MeiliTask> task = client.upsert(upsert)
        .andThen(CanBlockOnTask::waitForCompletion);
 ```
 You can access the encapsulated task in many ways: `.orElseThrow(Function.identity());` or `.ignoreErrors();`
-which returns an `Optional` containing the task if the original call was successful, ignoring eventual errors (hence the name)
+which returns an `Optional` containing the task if the original call was successful, ignoring eventual errors (hence the name)  
+
+More detailed tests are available in the same package `io.github.meilisearch.integration`

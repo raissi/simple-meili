@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 public abstract class BaseIntTest {
 
     @Container
-    public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v0.30.1"))
+    public static GenericContainer meili = new GenericContainer(DockerImageName.parse("getmeili/meilisearch:v1.2.0"))
             .withExposedPorts(7700)
             .withReuse(true)
             .withEnv("MEILI_MASTER_KEY", "masterKey")

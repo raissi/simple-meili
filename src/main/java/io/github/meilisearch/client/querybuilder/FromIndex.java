@@ -1,5 +1,6 @@
 package io.github.meilisearch.client.querybuilder;
 
+import io.github.meilisearch.client.querybuilder.delete.DeleteDocumentsByFilter;
 import io.github.meilisearch.client.querybuilder.search.SearchRequest;
 import io.github.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
 import io.github.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
@@ -13,4 +14,6 @@ public interface FromIndex extends FromIndexSearch<SearchRequest>, FromIndexGet 
     <T> DeleteOneDocument delete(T uid);
 
     <T> DeleteDocumentsByIds delete(Collection<T> ids);
+
+    DeleteDocumentsByFilter deleteByFilter(String filter);
 }

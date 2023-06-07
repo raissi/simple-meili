@@ -2,10 +2,7 @@ package io.github.meilisearch.client;
 
 import io.github.meilisearch.client.querybuilder.MeiliQueryBuilder;
 import io.github.meilisearch.client.querybuilder.WriteCanDefinePrimaryKey;
-import io.github.meilisearch.client.querybuilder.delete.DeleteAllDocuments;
-import io.github.meilisearch.client.querybuilder.delete.DeleteDocumentsByIds;
-import io.github.meilisearch.client.querybuilder.delete.DeleteIndex;
-import io.github.meilisearch.client.querybuilder.delete.DeleteOneDocument;
+import io.github.meilisearch.client.querybuilder.delete.*;
 import io.github.meilisearch.client.querybuilder.insert.OverrideDocuments;
 import io.github.meilisearch.client.querybuilder.insert.UpsertDocuments;
 import io.github.meilisearch.client.querybuilder.insert.WriteRequest;
@@ -198,6 +195,14 @@ public class MeiliClientOkHttp implements MeiliClient {
                             builder.post(RequestBody.create(deleteByIds.json(jsonWriter), JSON))
                                     .build();
         return write(deleteByIds, methodBuilder, Map.of());
+    }
+
+    @Override
+    public Try<CanBlockOnTask> deleteByFilter(DeleteDocumentsByFilter deleteByFilter) {
+        Function<Request.Builder, Request> methodBuilder = builder ->
+                builder.post(RequestBody.create(deleteByFilter.json(jsonWriter), JSON))
+                        .build();
+        return write(deleteByFilter, methodBuilder, Map.of());
     }
 
     @Override

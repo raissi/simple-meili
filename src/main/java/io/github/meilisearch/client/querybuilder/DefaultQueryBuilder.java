@@ -139,4 +139,10 @@ public class DefaultQueryBuilder implements FromIndex, IntoIndex {
         List<String> documentsIds = ids.stream().map(String::valueOf).collect(Collectors.toList());
         return new DefaultDeleteDocumentsByIds(this.index, documentsIds);
     }
+
+    @Override
+    public DeleteDocumentsByFilter deleteByFilter(String filter) {
+        return new DefaultDeleteDocumentsByFilter(this.index)
+                .filter(filter);
+    }
 }
